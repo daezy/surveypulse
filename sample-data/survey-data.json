@@ -1,0 +1,31 @@
+{
+  "title": "Software Engineering Tools Survey 2024",
+  "description": "Feedback from software developers about their development tools and workflows",
+  "responses": [
+    "The IDE crashes frequently when working with large files",
+    "Documentation could be more comprehensive and include more examples",
+    "Great collaboration features make remote work much easier",
+    "Performance issues when running multiple services simultaneously",
+    "The debugging tools are excellent and save a lot of time",
+    "Lack of proper testing framework integration",
+    "Would love to see better mobile support",
+    "The user interface is intuitive and easy to navigate",
+    "Integration with cloud services needs improvement",
+    "Learning curve is steep for beginners",
+    "Automated deployment features are very helpful",
+    "Need better error messages and debugging information",
+    "The community support is fantastic and very responsive",
+    "License costs are too high for small teams",
+    "Version control integration works seamlessly",
+    "Would like to see AI-assisted code completion features",
+    "The plugin ecosystem is rich but can be overwhelming",
+    "Build times are too slow for large projects",
+    "Real-time collaboration features need improvement",
+    "Security features are robust and well-implemented",
+    "The IDE is very resource-intensive and slows down my computer",
+    "Need better support for microservices architecture",
+    "Code refactoring tools are powerful and time-saving",
+    "Wish there was better offline functionality",
+    "The search functionality could be more intelligent"
+  ]
+}

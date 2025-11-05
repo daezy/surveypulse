@@ -1,0 +1,21 @@
+participant_id,q1,q2,q3,q4,q5
+p001,"Debugging complex distributed systems","Better distributed tracing tools","Microservices orchestration patterns","Flaky tests",8
+p002,"Managing technical debt across legacy codebases","AI-powered refactoring assistant","Legacy code modernization strategies","Context switching between projects",6
+p003,"Understanding and fixing performance bottlenecks","Advanced profiling with AI suggestions","Performance optimization techniques","Inadequate documentation",7
+p004,"Dealing with unclear requirements","Better requirements gathering tools","Agile methodology improvements","Too many meetings",5
+p005,"Testing asynchronous code effectively","Automated async testing frameworks","Concurrency testing methodologies","Code review delays",8
+p006,"Keeping up with rapidly changing technologies","Curated learning paths with AI","Technology adoption strategies","Learning curve for new tools",6
+p007,"Integrating multiple third-party APIs","Unified API management platform","API design best practices","API versioning conflicts",7
+p008,"Securing applications against evolving threats","AI-powered security analysis","Modern security patterns","Security testing overhead",9
+p009,"Optimizing database queries at scale","Intelligent query optimizer","Database scaling strategies","Database migration complexities",7
+p010,"Coordinating work in distributed teams","Better async collaboration tools","Remote team management","Time zone differences",6
+p011,"Writing maintainable test suites","Self-healing test frameworks","Test architecture patterns","Test maintenance burden",8
+p012,"Handling state management in complex UIs","Declarative state management tools","State management best practices","State synchronization issues",7
+p013,"Debugging production issues remotely","Better remote debugging capabilities","Production debugging techniques","Limited production access",9
+p014,"Balancing feature development with tech debt","Automated tech debt tracking","Technical debt prioritization","Pressure for new features",5
+p015,"Understanding unfamiliar codebases quickly","AI code explanation tools","Code comprehension strategies","Lack of documentation",8
+p016,"Managing dependencies and versions","Smart dependency resolver","Dependency management practices","Version compatibility issues",7
+p017,"Implementing proper error handling","Comprehensive error tracking system","Error handling patterns","Error message clarity",6
+p018,"Optimizing build and deployment times","Faster build systems with caching","CI/CD optimization techniques","Slow build pipelines",8
+p019,"Ensuring code quality across team","Automated code quality gates","Code review best practices","Inconsistent coding standards",7
+p020,"Monitoring application health in production","Better observability platforms","Monitoring and alerting strategies","Alert fatigue",9

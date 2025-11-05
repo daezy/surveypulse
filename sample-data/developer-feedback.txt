@@ -1,0 +1,51 @@
+The IDE crashes frequently when working with large files
+Documentation could be more comprehensive and include more examples
+Great collaboration features make remote work much easier
+Performance issues when running multiple services simultaneously
+The debugging tools are excellent and save a lot of time
+Lack of proper testing framework integration
+Would love to see better mobile support
+The user interface is intuitive and easy to navigate
+Integration with cloud services needs improvement
+Learning curve is steep for beginners
+Automated deployment features are very helpful
+Need better error messages and debugging information
+The community support is fantastic and very responsive
+License costs are too high for small teams
+Version control integration works seamlessly
+Would like to see AI-assisted code completion features
+The plugin ecosystem is rich but can be overwhelming
+Build times are too slow for large projects
+Real-time collaboration features need improvement
+Security features are robust and well-implemented
+The IDE is very resource-intensive and slows down my computer
+Need better support for microservices architecture
+Code refactoring tools are powerful and time-saving
+Wish there was better offline functionality
+The search functionality could be more intelligent
+Integration with project management tools would be beneficial
+Custom themes and layouts are great for personalization
+Need more templates for common project types
+The terminal integration is seamless and productive
+Lack of native support for certain programming languages
+Autocomplete suggestions are sometimes inaccurate
+Would appreciate better database management tools
+The git workflow is smooth and well-integrated
+Performance monitoring tools are lacking
+Need better support for containerized development
+The pricing model is confusing and expensive
+Keyboard shortcuts are customizable and efficient
+Lack of proper code review features
+Would like to see better API documentation generation
+The extension marketplace needs better curation
+Cross-platform consistency needs improvement
+Local development environment setup is complicated
+The code formatting tools work perfectly
+Need integrated performance profiling tools
+Better support for remote development environments would be great
+The debugging experience for async code could be improved
+Insufficient support for team collaboration workflows
+The built-in package manager is convenient
+Need better support for monorepo structures
+Code intelligence features are impressive
+Would appreciate better accessibility features

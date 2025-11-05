@@ -1,0 +1,6 @@
+question_id,question_text,question_type,is_analyzed
+q1,What challenges do you face in software development?,open_ended,true
+q2,What tools or features do you wish existed to help with your work?,open_ended,true
+q3,What topics or areas do you think need more research?,open_ended,true
+q4,What is the biggest blocker to your productivity?,open_ended,true
+q5,How satisfied are you with current development tools? (1-10),rating,false

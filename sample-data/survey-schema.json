@@ -1,0 +1,34 @@
+{
+  "questions": [
+    {
+      "question_id": "q1",
+      "question_text": "What challenges do you face in software development?",
+      "question_type": "open_ended",
+      "is_analyzed": true
+    },
+    {
+      "question_id": "q2",
+      "question_text": "What tools or features do you wish existed to help with your work?",
+      "question_type": "open_ended",
+      "is_analyzed": true
+    },
+    {
+      "question_id": "q3",
+      "question_text": "What topics or areas do you think need more research?",
+      "question_type": "open_ended",
+      "is_analyzed": true
+    },
+    {
+      "question_id": "q4",
+      "question_text": "What is the biggest blocker to your productivity?",
+      "question_type": "open_ended",
+      "is_analyzed": true
+    },
+    {
+      "question_id": "q5",
+      "question_text": "How satisfied are you with current development tools? (1-10)",
+      "question_type": "rating",
+      "is_analyzed": false
+    }
+  ]
+}
