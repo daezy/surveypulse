@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from typing import List
 import csv
 import json
@@ -138,9 +138,12 @@ async def upload_survey(survey: SurveyUpload, db=Depends(get_database)):
 async def upload_two_file_survey(
     schema_file: UploadFile = File(...),
     responses_file: UploadFile = File(...),
+    title: str = Form(None),
+    description: str = Form(None),
+    tags: str = Form(None),
     db=Depends(get_database),
 ):
-    """Upload survey with separate schema and responses files
+    """Upload survey with separate schema and responses files with optional metadata
 
     Schema file format (CSV/JSON):
     - CSV: question_id, question_text, question_type, is_analyzed
@@ -149,6 +152,13 @@ async def upload_two_file_survey(
     Responses file format (CSV/JSON):
     - CSV: participant_id, q1, q2, q3, ...
     - JSON: [{"participant_id": "p1", "q1": "answer", "q2": "answer", ...}]
+
+    Args:
+        schema_file: File containing survey questions/schema
+        responses_file: File containing participant responses
+        title: Custom title for the survey (optional)
+        description: Description of the survey (optional)
+        tags: Comma-separated tags (optional)
 
     Supports large files (up to 250MB)
     """
@@ -303,10 +313,34 @@ async def upload_two_file_survey(
                 status_code=400, detail="No valid responses after preprocessing"
             )
 
+        # Parse tags if provided
+        tag_list = []
+        if tags and tags.strip():
+            tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
+
+        # Generate friendly title and description only if not provided
+        if not title or not title.strip():
+            # Use schema filename without extension as base
+            base_name = schema_file.filename.rsplit(".", 1)[0]
+            # Replace common separators with spaces and title-case
+            title = base_name.replace("_", " ").replace("-", " ").title()
+            print(f"✨ Auto-generated title: {title}")
+        else:
+            title = title.strip()
+            print(f"✅ Using provided title: {title}")
+
+        if not description or not description.strip():
+            description = f"Two-file survey with {len(questions)} questions and {len(structured_responses)} participant responses"
+            print(f"✨ Auto-generated description: {description}")
+        else:
+            description = description.strip()
+            print(f"✅ Using provided description: {description}")
+
         # Create structured survey document
         survey_doc = {
-            "title": f"{schema_file.filename} + {responses_file.filename}",
-            "description": f"Two-file survey: schema from {schema_file.filename}, responses from {responses_file.filename}",
+            "title": title,
+            "description": description,
+            "tags": tag_list,
             "survey_type": "structured",
             "questions": questions,
             "total_participants": len(structured_responses),
@@ -342,8 +376,27 @@ async def upload_two_file_survey(
 
 
 @router.post("/upload-file")
-async def upload_survey_file(file: UploadFile = File(...), db=Depends(get_database)):
-    """Upload survey from file (CSV, TXT, JSON)"""
+async def upload_survey_file(
+    file: UploadFile = File(...),
+    title: str = Form(None),
+    description: str = Form(None),
+    tags: str = Form(None),
+    db=Depends(get_database),
+):
+    """Upload survey from file (CSV, TXT, JSON) with optional metadata
+
+    Args:
+        file: Survey file (CSV, TXT, or JSON)
+        title: Custom title for the survey (optional, defaults to filename)
+        description: Description of the survey (optional)
+        tags: Comma-separated tags (optional)
+    """
+
+    # Debug logging
+    print(f"📥 Received upload - File: {file.filename}")
+    print(f"📝 Title received: {repr(title)}")
+    print(f"📝 Description received: {repr(description)}")
+    print(f"🏷️ Tags received: {repr(tags)}")
 
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file provided")
@@ -423,10 +476,34 @@ async def upload_survey_file(file: UploadFile = File(...), db=Depends(get_databa
                             "response_count": len(cleaned),
                         }
 
+                # Parse tags if provided
+                tag_list = []
+                if tags and tags.strip():
+                    tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
+
+                # Generate friendly title and description only if not provided
+                if not title or not title.strip():
+                    # Remove file extension and make title-case
+                    base_name = file.filename.rsplit(".", 1)[0]
+                    # Replace common separators with spaces and title-case
+                    title = base_name.replace("_", " ").replace("-", " ").title()
+                    print(f"✨ Auto-generated title: {title}")
+                else:
+                    title = title.strip()
+                    print(f"✅ Using provided title: {title}")
+
+                if not description or not description.strip():
+                    description = f"Survey with {len(questions)} questions and {len(structured_responses)} participant responses"
+                    print(f"✨ Auto-generated description: {description}")
+                else:
+                    description = description.strip()
+                    print(f"✅ Using provided description: {description}")
+
                 # Create structured survey document
                 survey_doc = {
-                    "title": file.filename,
-                    "description": f"Multi-question survey uploaded from {file.filename}",
+                    "title": title,
+                    "description": description,
+                    "tags": tag_list,
                     "survey_type": "structured",
                     "questions": questions,
                     "total_participants": len(structured_responses),
@@ -504,10 +581,35 @@ async def upload_survey_file(file: UploadFile = File(...), db=Depends(get_databa
     # Preprocess responses
     cleaned_responses = preprocessor.preprocess_batch(responses)
 
+    # Parse tags if provided
+    tag_list = []
+    if tags and tags.strip():
+        tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
+
+    # Generate friendly title and description only if not provided
+    if not title or not title.strip():
+        # Remove file extension and make title-case
+        base_name = file.filename.rsplit(".", 1)[0]
+        # Replace common separators with spaces and title-case
+        title = base_name.replace("_", " ").replace("-", " ").title()
+        print(f"✨ Auto-generated title: {title}")
+    else:
+        title = title.strip()
+        print(f"✅ Using provided title: {title}")
+
+    if not description or not description.strip():
+        description = f"Survey with {len(cleaned_responses)} responses"
+        print(f"✨ Auto-generated description: {description}")
+    else:
+        description = description.strip()
+        print(f"✅ Using provided description: {description}")
+
     # Create survey document
     survey_doc = {
-        "title": file.filename,
-        "description": f"Uploaded from {file.filename}",
+        "title": title,
+        "description": description,
+        "tags": tag_list,
+        "survey_type": "simple",
         "total_responses": len(cleaned_responses),
         "responses": cleaned_responses,
         "status": SurveyStatus.PENDING.value,
@@ -539,7 +641,11 @@ async def get_surveys(db=Depends(get_database)):
                 "survey_id": str(doc["_id"]),
                 "title": doc["title"],
                 "description": doc.get("description"),
+                "tags": doc.get("tags", []),
+                "survey_type": doc.get("survey_type", "simple"),
                 "total_responses": doc["total_responses"],
+                "total_participants": doc.get("total_participants"),
+                "questions": doc.get("questions", []),
                 "status": doc["status"],
                 "created_at": doc["created_at"].isoformat(),
             }
@@ -564,8 +670,13 @@ async def get_survey(survey_id: str, db=Depends(get_database)):
         "survey_id": str(doc["_id"]),
         "title": doc["title"],
         "description": doc.get("description"),
+        "tags": doc.get("tags", []),
+        "survey_type": doc.get("survey_type", "simple"),
         "total_responses": doc["total_responses"],
+        "total_participants": doc.get("total_participants"),
+        "questions": doc.get("questions", []),
         "responses": doc.get("responses", []),
+        "processed_data": doc.get("processed_data", {}),
         "status": doc["status"],
         "created_at": doc["created_at"].isoformat(),
         "updated_at": doc["updated_at"].isoformat(),

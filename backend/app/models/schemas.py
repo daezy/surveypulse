@@ -44,6 +44,7 @@ class SurveyUpload(BaseModel):
 
     title: str
     description: Optional[str] = None
+    tags: Optional[List[str]] = []
     survey_type: str = (
         "simple"  # simple (single question) or structured (multi-question)
     )
@@ -64,6 +65,7 @@ class SurveyDocument(BaseModel):
     id: Optional[str] = Field(None, alias="_id")
     title: str
     description: Optional[str] = None
+    tags: Optional[List[str]] = []
     survey_type: str = "simple"  # simple or structured
 
     # For simple surveys

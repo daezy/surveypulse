@@ -3,11 +3,14 @@ from typing import List
 from datetime import datetime
 from bson import ObjectId
 import time
+import logging
 
 from app.core.database import get_database
 from app.models.schemas import AnalysisRequest, AnalysisType, SurveyStatus
 from app.services.llm_service import LLMService
 from app.services.preprocessing import DataPreprocessor
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 llm_service = LLMService()
@@ -23,13 +26,30 @@ async def perform_analysis_task(survey_id: str, analysis_types: List[AnalysisTyp
         if not survey:
             return
 
-        # Update status to processing
+        # Determine survey type first
+        survey_type = survey.get("survey_type", "simple")
+
+        # Update status to processing with initial progress
         await db.surveys.update_one(
             {"_id": ObjectId(survey_id)},
-            {"$set": {"status": SurveyStatus.PROCESSING.value}},
+            {
+                "$set": {
+                    "status": SurveyStatus.PROCESSING.value,
+                    "progress": {
+                        "step": "initializing",
+                        "message": "Starting analysis...",
+                        "current_question": 0,
+                        "total_questions": (
+                            len(survey.get("questions", []))
+                            if survey_type == "structured"
+                            else 1
+                        ),
+                        "percentage": 0,
+                        "last_updated": datetime.utcnow(),
+                    },
+                }
+            },
         )
-
-        survey_type = survey.get("survey_type", "simple")
         start_time = time.time()
 
         result_data = {
@@ -45,9 +65,57 @@ async def perform_analysis_task(survey_id: str, analysis_types: List[AnalysisTyp
             if not processed_data:
                 raise Exception("No processed data found for structured survey")
 
-            # Perform structured analysis
+            # Update progress: starting structured analysis
+            await db.surveys.update_one(
+                {"_id": ObjectId(survey_id)},
+                {
+                    "$set": {
+                        "progress.step": "analyzing_questions",
+                        "progress.message": "Analyzing individual questions...",
+                        "progress.percentage": 10,
+                        "progress.last_updated": datetime.utcnow(),
+                    }
+                },
+            )
+
+            # Perform structured analysis with progress callback
+            async def progress_callback(
+                step, message, current_question, total_questions
+            ):
+                percentage = (
+                    10 + int((current_question / total_questions) * 70)
+                    if total_questions > 0
+                    else 10
+                )
+                await db.surveys.update_one(
+                    {"_id": ObjectId(survey_id)},
+                    {
+                        "$set": {
+                            "progress.step": step,
+                            "progress.current_question": current_question,
+                            "progress.total_questions": total_questions,
+                            "progress.message": message,
+                            "progress.percentage": percentage,
+                            "progress.last_updated": datetime.utcnow(),
+                        }
+                    },
+                )
+
             structured_result = await llm_service.analyze_structured_survey(
-                processed_data
+                processed_data, progress_callback=progress_callback
+            )
+
+            # Update progress: cross-question analysis
+            await db.surveys.update_one(
+                {"_id": ObjectId(survey_id)},
+                {
+                    "$set": {
+                        "progress.step": "cross_analysis",
+                        "progress.message": "Generating cross-question insights...",
+                        "progress.percentage": 85,
+                        "progress.last_updated": datetime.utcnow(),
+                    }
+                },
             )
 
             result_data.update(
@@ -67,6 +135,19 @@ async def perform_analysis_task(survey_id: str, analysis_types: List[AnalysisTyp
         else:
             responses = survey.get("responses", [])
             result_data["total_responses_analyzed"] = len(responses)
+
+            # Update progress: analyzing simple survey
+            await db.surveys.update_one(
+                {"_id": ObjectId(survey_id)},
+                {
+                    "$set": {
+                        "progress.step": "analyzing",
+                        "progress.message": f"Analyzing {len(responses)} responses...",
+                        "progress.percentage": 20,
+                        "progress.last_updated": datetime.utcnow(),
+                    }
+                },
+            )
 
             # Perform requested analyses
             for analysis_type in analysis_types:
@@ -115,6 +196,19 @@ async def perform_analysis_task(survey_id: str, analysis_types: List[AnalysisTyp
         processing_time = time.time() - start_time
         result_data["processing_time"] = processing_time
 
+        # Update progress: finalizing
+        await db.surveys.update_one(
+            {"_id": ObjectId(survey_id)},
+            {
+                "$set": {
+                    "progress.step": "finalizing",
+                    "progress.message": "Finalizing results and preparing visualizations...",
+                    "progress.percentage": 95,
+                    "progress.last_updated": datetime.utcnow(),
+                }
+            },
+        )
+
         # Save analysis result
         analysis_result = await db.analyses.insert_one(result_data)
 
@@ -131,10 +225,19 @@ async def perform_analysis_task(survey_id: str, analysis_types: List[AnalysisTyp
         )
 
     except Exception as e:
+        # Log the error for debugging
+        logger.error(f"Analysis failed for survey {survey_id}: {str(e)}", exc_info=True)
+
         # Update status to failed
         await db.surveys.update_one(
             {"_id": ObjectId(survey_id)},
-            {"$set": {"status": SurveyStatus.FAILED.value, "error": str(e)}},
+            {
+                "$set": {
+                    "status": SurveyStatus.FAILED.value,
+                    "error": str(e),
+                    "updated_at": datetime.utcnow(),
+                }
+            },
         )
 
 
@@ -221,6 +324,8 @@ async def delete_analysis(analysis_id: str, db=Depends(get_database)):
 async def get_analysis_status(survey_id: str, db=Depends(get_database)):
     """Get the current status of survey analysis"""
 
+    logger.info(f"📡 Status check requested for survey: {survey_id}")
+
     try:
         survey = await db.surveys.find_one({"_id": ObjectId(survey_id)})
     except:
@@ -229,8 +334,15 @@ async def get_analysis_status(survey_id: str, db=Depends(get_database)):
     if not survey:
         raise HTTPException(status_code=404, detail="Survey not found")
 
-    return {
+    status_response = {
         "survey_id": survey_id,
         "status": survey.get("status"),
+        "progress": survey.get("progress", {}),
         "updated_at": survey.get("updated_at", datetime.utcnow()).isoformat(),
     }
+
+    logger.info(
+        f"✅ Status response for {survey_id}: status={status_response['status']}, progress={status_response['progress'].get('percentage', 0)}%"
+    )
+
+    return status_response

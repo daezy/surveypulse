@@ -171,7 +171,30 @@ CRITICAL INSTRUCTIONS:
             # Extract and clean JSON from response
             cleaned_result = self._extract_json_from_response(result)
             parsed = json.loads(cleaned_result)
-            return parsed
+
+            # Validate that we have the correct structure
+            if isinstance(parsed, dict) and "summary" in parsed:
+                # Ensure summary is a string, not nested JSON
+                if isinstance(parsed["summary"], str):
+                    # Check if summary field accidentally contains JSON
+                    summary_text = parsed["summary"].strip()
+                    if summary_text.startswith("{") and '"summary"' in summary_text:
+                        logger.warning(
+                            "Summary field contains nested JSON, extracting..."
+                        )
+                        try:
+                            nested = json.loads(summary_text)
+                            if isinstance(nested, dict) and "summary" in nested:
+                                parsed["summary"] = nested["summary"]
+                                if "key_findings" in nested:
+                                    parsed["key_findings"] = nested["key_findings"]
+                        except:
+                            pass
+                return parsed
+            else:
+                logger.warning(f"Unexpected summary structure: {type(parsed)}")
+                return {"summary": result, "key_findings": []}
+
         except json.JSONDecodeError as e:
             logger.error(
                 f"Failed to parse summary JSON: {str(e)}\nResponse: {result[:200]}..."
@@ -432,9 +455,27 @@ CRITICAL INSTRUCTIONS:
         topics_result = await self.detect_topics(responses)
         problems_result = await self.extract_open_problems(responses)
 
+        # Ensure summary is clean text, not nested JSON
+        summary_text = summary_result.get("summary", "")
+        key_findings = summary_result.get("key_findings", [])
+
+        # Validate that summary is not accidentally JSON
+        if isinstance(summary_text, str):
+            summary_text = summary_text.strip()
+            if summary_text.startswith("{") and '"summary"' in summary_text:
+                logger.warning("Detected nested JSON in full analysis summary")
+                try:
+                    nested = json.loads(summary_text)
+                    if isinstance(nested, dict):
+                        summary_text = nested.get("summary", summary_text)
+                        if "key_findings" in nested:
+                            key_findings = nested.get("key_findings", key_findings)
+                except:
+                    logger.error("Failed to parse nested JSON, using as-is")
+
         return {
-            "summary": summary_result.get("summary", ""),
-            "key_findings": summary_result.get("key_findings", []),
+            "summary": summary_text,
+            "key_findings": key_findings,
             "sentiment": sentiment_result,
             "topics": topics_result,
             "open_problems": problems_result,
@@ -455,10 +496,30 @@ CRITICAL INSTRUCTIONS:
         topics_result = await self.detect_topics(responses)
         problems_result = await self.extract_open_problems(responses)
 
+        # Ensure summary is clean text, not nested JSON
+        summary_text = summary_result.get("summary", "")
+        key_findings = summary_result.get("key_findings", [])
+
+        # Validate that summary is not accidentally JSON
+        if isinstance(summary_text, str):
+            summary_text = summary_text.strip()
+            if summary_text.startswith("{") and '"summary"' in summary_text:
+                logger.warning(
+                    f"Detected nested JSON in summary for question: {question_text[:50]}"
+                )
+                try:
+                    nested = json.loads(summary_text)
+                    if isinstance(nested, dict):
+                        summary_text = nested.get("summary", summary_text)
+                        if "key_findings" in nested:
+                            key_findings = nested.get("key_findings", key_findings)
+                except:
+                    logger.error(f"Failed to parse nested JSON, using as-is")
+
         return {
             "question_text": question_text,
-            "summary": summary_result.get("summary", ""),
-            "key_findings": summary_result.get("key_findings", []),
+            "summary": summary_text,
+            "key_findings": key_findings,
             "sentiment": sentiment_result,
             "topics": topics_result,
             "open_problems": problems_result,
@@ -466,7 +527,7 @@ CRITICAL INSTRUCTIONS:
         }
 
     async def analyze_structured_survey(
-        self, processed_data: Dict[str, Dict]
+        self, processed_data: Dict[str, Dict], progress_callback=None
     ) -> Dict[str, Any]:
         """Analyze a structured multi-question survey (like Stack Overflow Developer Survey)"""
 
@@ -475,9 +536,12 @@ CRITICAL INSTRUCTIONS:
         )
 
         question_analyses = []
+        total_questions = len(processed_data)
+        current_question = 0
 
         # Analyze each question separately
         for question_id, data in processed_data.items():
+            current_question += 1
             question_text = data["question_text"]
             responses = data["responses"]
 
@@ -488,11 +552,28 @@ CRITICAL INSTRUCTIONS:
                 )
                 continue
 
+            # Report progress before analyzing question
+            if progress_callback:
+                await progress_callback(
+                    step="analyzing_questions",
+                    message=f"Analyzing question: {question_text[:50]}...",
+                    current_question=current_question,
+                    total_questions=total_questions,
+                )
+
             analysis = await self.analyze_question(question_text, responses)
             analysis["question_id"] = question_id
             question_analyses.append(analysis)
 
         # Generate cross-question insights
+        if progress_callback:
+            await progress_callback(
+                step="generating_insights",
+                message="Generating cross-question insights...",
+                current_question=total_questions,
+                total_questions=total_questions,
+            )
+
         cross_insights = await self._generate_cross_question_insights(question_analyses)
 
         return {
