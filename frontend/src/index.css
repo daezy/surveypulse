@@ -177,4 +177,21 @@
     outline-offset: 2px;
     border-radius: var(--radius);
   }
+
+  /* Collapsible details styling */
+  details[open] summary .chevron {
+    transform: rotate(90deg);
+  }
+
+  details summary .chevron {
+    transition: transform 0.2s ease;
+  }
+
+  details summary::-webkit-details-marker {
+    display: none;
+  }
+
+  details summary {
+    list-style: none;
+  }
 }

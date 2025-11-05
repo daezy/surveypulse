@@ -19,7 +19,13 @@ export default function UploadPage() {
     const [formData, setFormData] = useState({
         title: '',
         description: '',
+        tags: '',
         responses: ''
+    })
+    const [fileMetadata, setFileMetadata] = useState({
+        title: '',
+        description: '',
+        tags: ''
     })
 
     const onDrop = (acceptedFiles) => {
@@ -47,7 +53,8 @@ export default function UploadPage() {
 
         setLoading(true)
         try {
-            const result = await uploadSurveyFile(uploadedFile)
+            console.log('📤 Uploading file with metadata:', fileMetadata)
+            const result = await uploadSurveyFile(uploadedFile, fileMetadata)
             toast.success('Survey uploaded successfully!')
             navigate(`/survey/${result.survey_id}`)
         } catch (error) {
@@ -65,7 +72,7 @@ export default function UploadPage() {
 
         setLoading(true)
         try {
-            const result = await uploadTwoFileSurvey(schemaFile, responsesFile)
+            const result = await uploadTwoFileSurvey(schemaFile, responsesFile, fileMetadata)
             toast.success('Two-file survey uploaded successfully!')
             navigate(`/survey/${result.survey_id}`)
         } catch (error) {
@@ -95,9 +102,13 @@ export default function UploadPage() {
 
         setLoading(true)
         try {
+            // Parse tags
+            const tags = formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(t => t) : []
+
             const result = await uploadSurvey({
                 title: formData.title,
                 description: formData.description,
+                tags,
                 responses
             })
             toast.success('Survey uploaded successfully!')
@@ -203,6 +214,51 @@ export default function UploadPage() {
                                     </p>
                                 </div>
                             )}
+                        </div>
+
+                        {/* Metadata Fields */}
+                        <div className="space-y-4 pt-4 border-t">
+                            <div className="space-y-2">
+                                <label htmlFor="file-title" className="text-sm font-medium">
+                                    Survey Title (Optional)
+                                </label>
+                                <Input
+                                    id="file-title"
+                                    placeholder="e.g., Customer Feedback Q4 2024"
+                                    value={fileMetadata.title}
+                                    onChange={(e) => setFileMetadata({ ...fileMetadata, title: e.target.value })}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    If not provided, filename will be used
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label htmlFor="file-description" className="text-sm font-medium">
+                                    Description (Optional)
+                                </label>
+                                <Input
+                                    id="file-description"
+                                    placeholder="e.g., Quarterly customer satisfaction survey"
+                                    value={fileMetadata.description}
+                                    onChange={(e) => setFileMetadata({ ...fileMetadata, description: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label htmlFor="file-tags" className="text-sm font-medium">
+                                    Tags (Optional)
+                                </label>
+                                <Input
+                                    id="file-tags"
+                                    placeholder="e.g., customer, feedback, Q4, 2024"
+                                    value={fileMetadata.tags}
+                                    onChange={(e) => setFileMetadata({ ...fileMetadata, tags: e.target.value })}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Comma-separated tags for organization
+                                </p>
+                            </div>
                         </div>
 
                         <Button
@@ -333,6 +389,51 @@ export default function UploadPage() {
                             </p>
                         </div>
 
+                        {/* Metadata Fields */}
+                        <div className="space-y-4 pt-4 border-t">
+                            <div className="space-y-2">
+                                <label htmlFor="two-file-title" className="text-sm font-medium">
+                                    Survey Title (Optional)
+                                </label>
+                                <Input
+                                    id="two-file-title"
+                                    placeholder="e.g., Employee Engagement Survey 2024"
+                                    value={fileMetadata.title}
+                                    onChange={(e) => setFileMetadata({ ...fileMetadata, title: e.target.value })}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    If not provided, filenames will be used
+                                </p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label htmlFor="two-file-description" className="text-sm font-medium">
+                                    Description (Optional)
+                                </label>
+                                <Input
+                                    id="two-file-description"
+                                    placeholder="e.g., Annual employee engagement and satisfaction survey"
+                                    value={fileMetadata.description}
+                                    onChange={(e) => setFileMetadata({ ...fileMetadata, description: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label htmlFor="two-file-tags" className="text-sm font-medium">
+                                    Tags (Optional)
+                                </label>
+                                <Input
+                                    id="two-file-tags"
+                                    placeholder="e.g., employee, engagement, annual, HR"
+                                    value={fileMetadata.tags}
+                                    onChange={(e) => setFileMetadata({ ...fileMetadata, tags: e.target.value })}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Comma-separated tags for organization
+                                </p>
+                            </div>
+                        </div>
+
                         <Button
                             className="w-full"
                             size="lg"
@@ -391,6 +492,20 @@ export default function UploadPage() {
 
                             <div>
                                 <label className="block text-sm font-medium mb-2">
+                                    Tags (optional)
+                                </label>
+                                <Input
+                                    placeholder="e.g., developer, experience, feedback"
+                                    value={formData.tags}
+                                    onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                                />
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Comma-separated tags for organization
+                                </p>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-2">
                                     Survey Responses <span className="text-red-500">*</span>
                                 </label>
                                 <textarea
@@ -429,31 +544,31 @@ export default function UploadPage() {
             )}
 
             {/* Info Section */}
-            <Card className="bg-blue-50 border-blue-200">
+            <Card className="bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800">
                 <CardContent className="pt-6">
-                    <h3 className="font-semibold mb-2">File Format Guidelines:</h3>
+                    <h3 className="font-semibold mb-2 text-foreground">File Format Guidelines:</h3>
                     <ul className="space-y-1 text-sm text-muted-foreground">
-                        <li>• <strong>CSV (Single Question):</strong> Use a column named "response", "text", or "feedback"</li>
-                        <li>• <strong>CSV (Multi-Question):</strong> Multiple columns with question headers, one row per participant (Stack Overflow style)</li>
-                        <li>• <strong>Two-File Survey:</strong> Separate schema file (questions) + responses file (participant answers)</li>
-                        <li>• <strong>TXT:</strong> One response per line</li>
-                        <li>• <strong>JSON:</strong> Array of strings or objects with response fields</li>
+                        <li>• <strong className="text-foreground">CSV (Single Question):</strong> Use a column named "response", "text", or "feedback"</li>
+                        <li>• <strong className="text-foreground">CSV (Multi-Question):</strong> Multiple columns with question headers, one row per participant (Stack Overflow style)</li>
+                        <li>• <strong className="text-foreground">Two-File Survey:</strong> Separate schema file (questions) + responses file (participant answers)</li>
+                        <li>• <strong className="text-foreground">TXT:</strong> One response per line</li>
+                        <li>• <strong className="text-foreground">JSON:</strong> Array of strings or objects with response fields</li>
                     </ul>
-                    <div className="mt-3 p-3 bg-white rounded border border-blue-300">
-                        <p className="text-xs font-semibold text-blue-800 mb-1">✨ New: Multi-Question & Two-File Surveys</p>
-                        <p className="text-xs text-blue-700 mb-2">
+                    <div className="mt-3 p-3 bg-white dark:bg-gray-800 rounded border border-blue-300 dark:border-blue-600">
+                        <p className="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1">✨ New: Multi-Question & Two-File Surveys</p>
+                        <p className="text-xs text-blue-700 dark:text-blue-200 mb-2">
                             <strong>Single file:</strong> Upload CSV files with multiple columns to analyze surveys with multiple questions.
                             Each column header becomes a question, and each row represents one participant's responses.
                         </p>
-                        <p className="text-xs text-blue-700">
+                        <p className="text-xs text-blue-700 dark:text-blue-200">
                             <strong>Two files:</strong> Upload separate schema (questions definitions) and responses files.
                             Common for Google Forms exports, Qualtrics, SurveyMonkey, and other professional survey platforms.
                         </p>
                     </div>
-                    <div className="mt-3 p-3 bg-green-50 rounded border border-green-300">
-                        <p className="text-xs font-semibold text-green-800 mb-1">📦 Sample Data Available</p>
-                        <p className="text-xs text-green-700">
-                            Try the two-file upload with: <code className="bg-green-100 px-1">survey-schema.csv</code> + <code className="bg-green-100 px-1">two-file-responses.csv</code>
+                    <div className="mt-3 p-3 bg-green-50 dark:bg-green-950/50 rounded border border-green-300 dark:border-green-700">
+                        <p className="text-xs font-semibold text-green-800 dark:text-green-300 mb-1">📦 Sample Data Available</p>
+                        <p className="text-xs text-green-700 dark:text-green-200">
+                            Try the two-file upload with: <code className="bg-green-100 dark:bg-green-800 px-1 rounded text-green-800 dark:text-green-200">survey-schema.csv</code> + <code className="bg-green-100 dark:bg-green-800 px-1 rounded text-green-800 dark:text-green-200">two-file-responses.csv</code>
                         </p>
                     </div>
                 </CardContent>

@@ -151,7 +151,7 @@ export default function DashboardPage() {
                                     <CardContent className="p-6">
                                         <div className="flex items-center justify-between gap-4">
                                             <div className="flex-1">
-                                                <div className="flex items-center gap-3 mb-2">
+                                                <div className="flex items-center gap-3 mb-2 flex-wrap">
                                                     <h3 className="font-semibold text-lg">{survey.title}</h3>
                                                     <Badge className={getStatusColor(survey.status)}>
                                                         {survey.status}
@@ -163,9 +163,22 @@ export default function DashboardPage() {
                                                     )}
                                                 </div>
                                                 {survey.description && (
-                                                    <p className="text-sm text-muted-foreground mb-3">
+                                                    <p className="text-sm text-muted-foreground mb-2">
                                                         {survey.description}
                                                     </p>
+                                                )}
+                                                {survey.tags && survey.tags.length > 0 && (
+                                                    <div className="flex items-center gap-2 mb-3 flex-wrap">
+                                                        {survey.tags.map((tag, index) => (
+                                                            <Badge
+                                                                key={index}
+                                                                variant="outline"
+                                                                className="text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+                                                            >
+                                                                {tag}
+                                                            </Badge>
+                                                        ))}
+                                                    </div>
                                                 )}
                                                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                                     {survey.survey_type === 'structured' ? (

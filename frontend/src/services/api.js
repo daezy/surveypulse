@@ -9,6 +9,36 @@ const api = axios.create({
   },
 });
 
+// Add request interceptor for logging
+api.interceptors.request.use(
+  (config) => {
+    console.log(
+      `🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`,
+      config.data || ""
+    );
+    return config;
+  },
+  (error) => {
+    console.error("❌ API Request Error:", error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for logging
+api.interceptors.response.use(
+  (response) => {
+    console.log(`✅ API Response: ${response.config.url}`, response.data);
+    return response;
+  },
+  (error) => {
+    console.error(
+      `❌ API Response Error: ${error.config?.url}`,
+      error.response?.data || error.message
+    );
+    return Promise.reject(error);
+  }
+);
+
 // Health check
 export const healthCheck = async () => {
   const response = await api.get("/api/v1/health");
@@ -21,9 +51,23 @@ export const uploadSurvey = async (data) => {
   return response.data;
 };
 
-export const uploadSurveyFile = async (file) => {
+export const uploadSurveyFile = async (file, metadata = {}) => {
   const formData = new FormData();
   formData.append("file", file);
+
+  // Add metadata if provided (even if empty - backend will handle defaults)
+  if (metadata.title !== undefined && metadata.title !== null) {
+    formData.append("title", metadata.title);
+    console.log("📝 Adding title:", metadata.title);
+  }
+  if (metadata.description !== undefined && metadata.description !== null) {
+    formData.append("description", metadata.description);
+    console.log("📝 Adding description:", metadata.description);
+  }
+  if (metadata.tags !== undefined && metadata.tags !== null) {
+    formData.append("tags", metadata.tags);
+    console.log("🏷️ Adding tags:", metadata.tags);
+  }
 
   const response = await api.post("/api/v1/surveys/upload-file", formData, {
     headers: {
@@ -33,10 +77,28 @@ export const uploadSurveyFile = async (file) => {
   return response.data;
 };
 
-export const uploadTwoFileSurvey = async (schemaFile, responsesFile) => {
+export const uploadTwoFileSurvey = async (
+  schemaFile,
+  responsesFile,
+  metadata = {}
+) => {
   const formData = new FormData();
   formData.append("schema_file", schemaFile);
   formData.append("responses_file", responsesFile);
+
+  // Add metadata if provided (even if empty - backend will handle defaults)
+  if (metadata.title !== undefined && metadata.title !== null) {
+    formData.append("title", metadata.title);
+    console.log("📝 Adding title:", metadata.title);
+  }
+  if (metadata.description !== undefined && metadata.description !== null) {
+    formData.append("description", metadata.description);
+    console.log("📝 Adding description:", metadata.description);
+  }
+  if (metadata.tags !== undefined && metadata.tags !== null) {
+    formData.append("tags", metadata.tags);
+    console.log("🏷️ Adding tags:", metadata.tags);
+  }
 
   const response = await api.post("/api/v1/surveys/upload-two-file", formData, {
     headers: {

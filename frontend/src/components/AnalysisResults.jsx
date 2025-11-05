@@ -6,12 +6,47 @@ import {
     Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis,
     PolarRadiusAxis, Radar, LineChart, Line, Area, AreaChart
 } from 'recharts'
-import { FileText, TrendingUp, AlertCircle, Lightbulb, BarChart3, Target, MessageSquare } from 'lucide-react'
+import { FileText, TrendingUp, AlertCircle, Lightbulb, BarChart3, Target, MessageSquare, Tag, Network, ChevronRight } from 'lucide-react'
 import { getSentimentColor, getSentimentBgColor, getSentimentVariant, formatNumber } from '@/lib/utils'
 
 const COLORS = ['#10b981', '#ef4444', '#6b7280']
 const TOPIC_COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#8b5cf6']
 const PRIORITY_COLORS = { high: '#ef4444', medium: '#f59e0b', low: '#6b7280' }
+
+// Helper to safely extract summary text (handles edge case of stringified JSON)
+const getSafeText = (value) => {
+    if (!value) return ''
+    if (typeof value !== 'string') return String(value)
+
+    // Check if it's accidentally a stringified JSON object
+    const trimmed = value.trim()
+    if (trimmed.startsWith('{') && trimmed.includes('"summary"')) {
+        console.log('⚠️ Detected stringified JSON in summary field')
+        try {
+            const parsed = JSON.parse(trimmed)
+            // If it has a summary field, use that
+            if (parsed.summary) {
+                console.log('✅ Extracted summary text from JSON')
+                return parsed.summary
+            }
+        } catch (e) {
+            console.warn('⚠️ JSON parsing failed, extracting text manually:', e.message)
+            // If JSON is malformed, extract the summary text manually
+            const summaryMatch = trimmed.match(/"summary"\s*:\s*"((?:[^"\\]|\\.)*)"/s)
+            if (summaryMatch && summaryMatch[1]) {
+                // Unescape the string
+                const extracted = summaryMatch[1]
+                    .replace(/\\n/g, '\n')
+                    .replace(/\\"/g, '"')
+                    .replace(/\\\\/g, '\\')
+                console.log('✅ Extracted summary text via regex')
+                return extracted
+            }
+        }
+    }
+
+    return value
+}
 
 export default function AnalysisResults({ results }) {
     // Check if this is a structured (multi-question) survey
@@ -370,60 +405,139 @@ export default function AnalysisResults({ results }) {
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {results.cross_question_insights.overall_insights &&
-                            results.cross_question_insights.overall_insights !== "Unable to generate cross-question insights" && (
+                        {/* Compact Summary Section */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {/* Common Themes - Compact Cards */}
+                            {results.cross_question_insights.common_themes && results.cross_question_insights.common_themes.length > 0 && (
                                 <div className="bg-card p-4 rounded-lg border">
                                     <h4 className="font-semibold mb-3 flex items-center gap-2">
-                                        <TrendingUp className="w-5 h-5 text-primary" />
-                                        Overall Insights
+                                        <Tag className="w-4 h-4 text-blue-500" />
+                                        Common Themes
                                     </h4>
-                                    <p className="text-muted-foreground leading-relaxed">
-                                        {results.cross_question_insights.overall_insights}
-                                    </p>
+                                    <div className="flex flex-wrap gap-1">
+                                        {results.cross_question_insights.common_themes.slice(0, 3).map((theme, idx) => (
+                                            <Badge key={idx} variant="secondary" className="text-xs px-2 py-1">
+                                                {theme.length > 20 ? theme.substring(0, 20) + '...' : theme}
+                                            </Badge>
+                                        ))}
+                                        {results.cross_question_insights.common_themes.length > 3 && (
+                                            <Badge variant="outline" className="text-xs">
+                                                +{results.cross_question_insights.common_themes.length - 3} more
+                                            </Badge>
+                                        )}
+                                    </div>
                                 </div>
                             )}
-                        {results.cross_question_insights.common_themes && results.cross_question_insights.common_themes.length > 0 && (
-                            <div className="bg-card p-4 rounded-lg border">
-                                <h4 className="font-semibold mb-3">Common Themes</h4>
-                                <div className="flex flex-wrap gap-2">
-                                    {results.cross_question_insights.common_themes.map((theme, idx) => (
-                                        <Badge key={idx} variant="secondary" className="px-3 py-1">
-                                            {theme}
-                                        </Badge>
-                                    ))}
+
+                            {/* Key Patterns - Count Only */}
+                            {results.cross_question_insights.key_patterns && results.cross_question_insights.key_patterns.length > 0 && (
+                                <div className="bg-card p-4 rounded-lg border">
+                                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                        <TrendingUp className="w-4 h-4 text-green-500" />
+                                        Key Patterns
+                                    </h4>
+                                    <div className="text-2xl font-bold text-primary mb-1">
+                                        {results.cross_question_insights.key_patterns.length}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">patterns identified</p>
                                 </div>
-                            </div>
-                        )}
-                        {results.cross_question_insights.key_patterns && results.cross_question_insights.key_patterns.length > 0 && (
-                            <div className="bg-card p-4 rounded-lg border">
-                                <h4 className="font-semibold mb-3">Key Patterns</h4>
-                                <ul className="space-y-2">
-                                    {results.cross_question_insights.key_patterns.map((pattern, idx) => (
-                                        <li key={idx} className="flex items-start gap-3">
-                                            <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-                                                {idx + 1}
-                                            </div>
-                                            <span className="text-muted-foreground">{pattern}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                        {results.cross_question_insights.cross_question_findings && results.cross_question_insights.cross_question_findings.length > 0 && (
-                            <div className="bg-card p-4 rounded-lg border">
-                                <h4 className="font-semibold mb-3">Cross-Question Findings</h4>
-                                <ul className="space-y-2">
-                                    {results.cross_question_insights.cross_question_findings.map((finding, idx) => (
-                                        <li key={idx} className="flex items-start gap-3">
-                                            <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-                                                {idx + 1}
-                                            </div>
-                                            <span className="text-muted-foreground">{finding}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
+                            )}
+
+                            {/* Cross-Question Findings - Count Only */}
+                            {results.cross_question_insights.cross_question_findings && results.cross_question_insights.cross_question_findings.length > 0 && (
+                                <div className="bg-card p-4 rounded-lg border">
+                                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                                        <Network className="w-4 h-4 text-purple-500" />
+                                        Cross-Findings
+                                    </h4>
+                                    <div className="text-2xl font-bold text-primary mb-1">
+                                        {results.cross_question_insights.cross_question_findings.length}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">connections found</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Collapsible Overall Insights */}
+                        {results.cross_question_insights.overall_insights &&
+                            results.cross_question_insights.overall_insights !== "Unable to generate cross-question insights" && (
+                                <details className="bg-card rounded-lg border">
+                                    <summary className="cursor-pointer p-4 hover:bg-accent rounded-lg transition-colors">
+                                        <div className="flex items-center gap-2 font-semibold">
+                                            <ChevronRight className="w-4 h-4 chevron" />
+                                            <TrendingUp className="w-4 h-4 text-primary" />
+                                            Overall Insights
+                                            <Badge variant="outline" className="ml-auto text-xs">
+                                                Click to expand
+                                            </Badge>
+                                        </div>
+                                    </summary>
+                                    <div className="px-4 pb-4 pt-2">
+                                        <div className="max-h-48 overflow-y-auto pr-2">
+                                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                                {results.cross_question_insights.overall_insights}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </details>
+                            )}
+
+                        {/* Collapsible Detailed Sections */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Key Patterns - Collapsible */}
+                            {results.cross_question_insights.key_patterns && results.cross_question_insights.key_patterns.length > 0 && (
+                                <details className="bg-card rounded-lg border">
+                                    <summary className="cursor-pointer p-4 hover:bg-accent rounded-lg transition-colors">
+                                        <div className="flex items-center gap-2 font-semibold text-sm">
+                                            <ChevronRight className="w-4 h-4 chevron" />
+                                            <TrendingUp className="w-4 h-4 text-green-500" />
+                                            View All Patterns ({results.cross_question_insights.key_patterns.length})
+                                        </div>
+                                    </summary>
+                                    <div className="px-4 pb-4">
+                                        <div className="max-h-40 overflow-y-auto pr-2">
+                                            <ul className="space-y-2 text-sm">
+                                                {results.cross_question_insights.key_patterns.map((pattern, idx) => (
+                                                    <li key={idx} className="flex items-start gap-2">
+                                                        <div className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                                                            {idx + 1}
+                                                        </div>
+                                                        <span className="text-muted-foreground text-xs leading-relaxed">{pattern}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </details>
+                            )}
+
+                            {/* Cross-Question Findings - Collapsible */}
+                            {results.cross_question_insights.cross_question_findings && results.cross_question_insights.cross_question_findings.length > 0 && (
+                                <details className="bg-card rounded-lg border">
+                                    <summary className="cursor-pointer p-4 hover:bg-accent rounded-lg transition-colors">
+                                        <div className="flex items-center gap-2 font-semibold text-sm">
+                                            <ChevronRight className="w-4 h-4 chevron" />
+                                            <Network className="w-4 h-4 text-purple-500" />
+                                            View All Findings ({results.cross_question_insights.cross_question_findings.length})
+                                        </div>
+                                    </summary>
+                                    <div className="px-4 pb-4">
+                                        <div className="max-h-40 overflow-y-auto pr-2">
+                                            <ul className="space-y-2 text-sm">
+                                                {results.cross_question_insights.cross_question_findings.map((finding, idx) => (
+                                                    <li key={idx} className="flex items-start gap-2">
+                                                        <div className="w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                                                            {idx + 1}
+                                                        </div>
+                                                        <span className="text-muted-foreground text-xs leading-relaxed">{finding}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </details>
+                            )}
+                        </div>
                     </CardContent>
                 </Card>
             )}
@@ -452,7 +566,7 @@ export default function AnalysisResults({ results }) {
                                     <FileText className="w-4 h-4 text-primary" />
                                     Summary
                                 </h4>
-                                <p className="text-muted-foreground leading-relaxed">{qa.summary}</p>
+                                <p className="text-muted-foreground leading-relaxed">{getSafeText(qa.summary)}</p>
                             </div>
                         )}
 
@@ -548,7 +662,7 @@ export default function AnalysisResults({ results }) {
                     <CardContent>
                         <div className="prose max-w-none">
                             <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                                {results.summary}
+                                {getSafeText(results.summary)}
                             </p>
                         </div>
                     </CardContent>
