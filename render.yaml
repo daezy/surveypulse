@@ -23,7 +23,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
-        value: false
+        value: "false"
       - key: DATABASE_NAME
         value: survey_analysis
       - key: ALLOWED_ORIGINS
@@ -33,15 +33,17 @@ services:
   - type: web
     name: surveypulse-frontend
     runtime: static
-    region: oregon
-    plan: free
     branch: main
     rootDir: frontend
     buildCommand: npm install && npm run build
-    staticPublishPath: dist
+    pullRequestPreviewsEnabled: true
     envVars:
       - key: VITE_API_BASE_URL
         value: https://surveypulse-backend.onrender.com/api/v1
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate
     routes:
       - type: rewrite
         source: /*
