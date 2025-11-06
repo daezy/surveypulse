@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { UserPlus, Mail, Lock, User, Brain } from 'lucide-react'
+import { UserPlus, Mail, Lock, User, Brain, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { register } from '@/services/auth'
@@ -38,29 +38,72 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
+    <div className="relative overflow-hidden min-h-screen flex items-center justify-center px-4 py-12">
+      {/* Background matching HomePage */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_48%,#8881_49%,#8881_51%,transparent_52%)] bg-[size:8rem_8rem] opacity-30" />
+        
+        <motion.div
+          animate={{
+            x: [0, 100, 0],
+            y: [0, -50, 0],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-blue-500/10 blur-3xl"
+        />
+        <motion.div
+          animate={{
+            x: [0, -100, 0],
+            y: [0, 50, 0],
+            scale: [1.2, 1, 1.2],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute bottom-0 left-1/4 w-[700px] h-[700px] bg-purple-500/10 blur-3xl"
+        />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        className="w-full max-w-md relative"
       >
-        <Card className="border-2">
-          <CardHeader className="text-center space-y-2">
-            <div className="flex justify-center mb-4">
+        <Card className="border-2 bg-background/80 backdrop-blur-sm">
+          <CardHeader className="text-center space-y-4 pb-8">
+            <motion.div 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+              className="flex justify-center"
+            >
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 blur-xl opacity-20" />
-                <div className="relative w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center">
-                  <Brain className="w-8 h-8 text-white" strokeWidth={2.5} />
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 blur-xl opacity-40" />
+                <div className="relative w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
+                  <Brain className="w-7 h-7 text-white" strokeWidth={2.5} />
                 </div>
               </div>
-            </div>
-            <CardTitle className="text-2xl font-black">Create Account</CardTitle>
-            <CardDescription>Start analyzing surveys with AI</CardDescription>
+            </motion.div>
+            <CardTitle className="text-3xl font-black tracking-tight">
+              Create Account
+            </CardTitle>
+            <CardDescription className="text-base">
+              Start analyzing surveys with AI-powered insights
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Full Name (Optional)</label>
+                <label className="text-sm font-semibold">Full Name <span className="text-muted-foreground font-normal">(Optional)</span></label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
@@ -68,13 +111,13 @@ export default function RegisterPage() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="John Doe"
-                    className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800"
+                    className="w-full pl-10 pr-4 py-3 border-2 border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-background transition-all"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Email</label>
+                <label className="text-sm font-semibold">Email</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
@@ -83,13 +126,13 @@ export default function RegisterPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
                     required
-                    className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800"
+                    className="w-full pl-10 pr-4 py-3 border-2 border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-background transition-all"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Password</label>
+                <label className="text-sm font-semibold">Password</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
@@ -99,44 +142,77 @@ export default function RegisterPage() {
                     placeholder="••••••••"
                     required
                     minLength={8}
-                    className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800"
+                    className="w-full pl-10 pr-4 py-3 border-2 border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-background transition-all"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">Must be at least 8 characters</p>
+                <p className="text-xs text-muted-foreground ml-1">Must be at least 8 characters</p>
               </div>
 
-              <Button
-                type="submit"
-                className="w-full gap-2 border-2 h-12"
-                disabled={loading}
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
               >
-                {loading ? (
-                  <>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    >
-                      <Brain className="w-5 h-5" />
-                    </motion.div>
-                    <span>Creating account...</span>
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="w-5 h-5" />
-                    <span>Sign Up</span>
-                  </>
-                )}
-              </Button>
+                <Button
+                  type="submit"
+                  className="w-full gap-2 border-2 h-12 bg-foreground text-background hover:bg-foreground/90 font-semibold"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      >
+                        <Brain className="w-5 h-5" />
+                      </motion.div>
+                      <span>Creating account...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Create Account</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </>
+                  )}
+                </Button>
+              </motion.div>
 
-              <div className="text-center text-sm text-muted-foreground">
-                Already have an account?{' '}
-                <Link to="/login" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">
-                  Sign in
-                </Link>
+              <div className="relative py-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border"></div>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Already have an account?
+                  </span>
+                </div>
               </div>
+
+              <Link to="/login">
+                <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full gap-2 border-2 h-12 font-semibold"
+                  >
+                    Sign In Instead
+                  </Button>
+                </motion.div>
+              </Link>
             </form>
           </CardContent>
         </Card>
+
+        {/* Back to Home Link */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="text-center mt-6"
+        >
+          <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            ← Back to Home
+          </Link>
+        </motion.div>
       </motion.div>
     </div>
   )
