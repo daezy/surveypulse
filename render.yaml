@@ -16,16 +16,26 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
-      - key: MONGODB_URI
-        sync: false
-      - key: OPENAI_API_KEY
-        sync: false
-      - key: SECRET_KEY
-        generateValue: true
       - key: DEBUG
         value: "false"
+      - key: MONGODB_URI
+        sync: false
       - key: DATABASE_NAME
         value: survey_analysis
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: OPENAI_MAX_TOKENS
+        value: "4096"
+      - key: OPENAI_TEMPERATURE
+        value: "0.7"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "30"
       - key: ALLOWED_ORIGINS
         value: https://surveypulse-frontend.onrender.com,https://*.onrender.com
 
