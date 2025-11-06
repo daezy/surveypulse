@@ -6,7 +6,9 @@ import time
 import logging
 
 from app.core.database import get_database
+from app.core.deps import get_current_active_user
 from app.models.schemas import AnalysisRequest, AnalysisType, SurveyStatus
+from app.models.user import User
 from app.services.llm_service import LLMService
 from app.services.preprocessing import DataPreprocessor
 
@@ -246,12 +248,13 @@ async def start_analysis(
     request: AnalysisRequest,
     background_tasks: BackgroundTasks,
     db=Depends(get_database),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Start analysis of survey responses"""
 
-    # Verify survey exists
+    # Verify survey exists and belongs to user
     try:
-        survey = await db.surveys.find_one({"_id": ObjectId(request.survey_id)})
+        survey = await db.surveys.find_one({"_id": ObjectId(request.survey_id), "user_id": current_user.id})
     except:
         raise HTTPException(status_code=400, detail="Invalid survey ID")
 
@@ -272,8 +275,17 @@ async def start_analysis(
 
 
 @router.get("/{survey_id}/results")
-async def get_analysis_results(survey_id: str, db=Depends(get_database)):
+async def get_analysis_results(
+    survey_id: str, 
+    db=Depends(get_database),
+    current_user: User = Depends(get_current_active_user)
+):
     """Get analysis results for a survey"""
+    
+    # Verify survey belongs to user
+    survey = await db.surveys.find_one({"_id": ObjectId(survey_id), "user_id": current_user.id})
+    if not survey:
+        raise HTTPException(status_code=404, detail="Survey not found")
 
     # Get the latest analysis for this survey
     analysis = await db.analyses.find_one(
@@ -291,8 +303,17 @@ async def get_analysis_results(survey_id: str, db=Depends(get_database)):
 
 
 @router.get("/{survey_id}/all-results")
-async def get_all_analysis_results(survey_id: str, db=Depends(get_database)):
+async def get_all_analysis_results(
+    survey_id: str, 
+    db=Depends(get_database),
+    current_user: User = Depends(get_current_active_user)
+):
     """Get all analysis results for a survey"""
+    
+    # Verify survey belongs to user
+    survey = await db.surveys.find_one({"_id": ObjectId(survey_id), "user_id": current_user.id})
+    if not survey:
+        raise HTTPException(status_code=404, detail="Survey not found")
 
     cursor = db.analyses.find({"survey_id": survey_id}).sort("created_at", -1)
     results = []
@@ -306,23 +327,44 @@ async def get_all_analysis_results(survey_id: str, db=Depends(get_database)):
 
 
 @router.delete("/{analysis_id}")
-async def delete_analysis(analysis_id: str, db=Depends(get_database)):
+async def delete_analysis(
+    analysis_id: str, 
+    db=Depends(get_database),
+    current_user: User = Depends(get_current_active_user)
+):
     """Delete an analysis result"""
-
+    
+    # Get the analysis to verify ownership
     try:
-        result = await db.analyses.delete_one({"_id": ObjectId(analysis_id)})
+        analysis = await db.analyses.find_one({"_id": ObjectId(analysis_id)})
     except:
         raise HTTPException(status_code=400, detail="Invalid analysis ID")
-
-    if result.deleted_count == 0:
+        
+    if not analysis:
         raise HTTPException(status_code=404, detail="Analysis not found")
+    
+    # Verify the survey belongs to the user
+    survey = await db.surveys.find_one({"_id": ObjectId(analysis["survey_id"]), "user_id": current_user.id})
+    if not survey:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this analysis")
+
+    result = await db.analyses.delete_one({"_id": ObjectId(analysis_id)})
 
     return {"message": "Analysis deleted successfully"}
 
 
 @router.get("/{survey_id}/status")
-async def get_analysis_status(survey_id: str, db=Depends(get_database)):
+async def get_analysis_status(
+    survey_id: str, 
+    db=Depends(get_database),
+    current_user: User = Depends(get_current_active_user)
+):
     """Get the current status of survey analysis"""
+    
+    # Verify survey belongs to user
+    survey = await db.surveys.find_one({"_id": ObjectId(survey_id), "user_id": current_user.id})
+    if not survey:
+        raise HTTPException(status_code=404, detail="Survey not found")
 
     logger.info(f"📡 Status check requested for survey: {survey_id}")
 

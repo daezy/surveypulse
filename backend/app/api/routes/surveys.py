@@ -7,7 +7,9 @@ from datetime import datetime
 from bson import ObjectId
 
 from app.core.database import get_database
+from app.core.deps import get_current_active_user
 from app.models.schemas import SurveyUpload, SurveyDocument, SurveyStatus
+from app.models.user import User
 from app.services.preprocessing import DataPreprocessor
 
 router = APIRouter()
@@ -15,7 +17,11 @@ preprocessor = DataPreprocessor()
 
 
 @router.post("/upload")
-async def upload_survey(survey: SurveyUpload, db=Depends(get_database)):
+async def upload_survey(
+    survey: SurveyUpload, 
+    db=Depends(get_database),
+    current_user: User = Depends(get_current_active_user)
+):
     """Upload survey responses - supports both simple and multi-question surveys"""
 
     # Handle simple surveys (backward compatible)
@@ -39,6 +45,7 @@ async def upload_survey(survey: SurveyUpload, db=Depends(get_database)):
             "total_responses": len(cleaned_responses),
             "responses": cleaned_responses,
             "status": SurveyStatus.PENDING.value,
+            "user_id": current_user.id,
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
         }
@@ -108,6 +115,7 @@ async def upload_survey(survey: SurveyUpload, db=Depends(get_database)):
                 data["response_count"] for data in processed_data.values()
             ),
             "status": SurveyStatus.PENDING.value,
+            "user_id": current_user.id,
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
         }
@@ -142,6 +150,7 @@ async def upload_two_file_survey(
     description: str = Form(None),
     tags: str = Form(None),
     db=Depends(get_database),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Upload survey with separate schema and responses files with optional metadata
 
@@ -349,6 +358,7 @@ async def upload_two_file_survey(
                 data["response_count"] for data in processed_data.values()
             ),
             "status": SurveyStatus.PENDING.value,
+            "user_id": current_user.id,
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
         }
@@ -382,6 +392,7 @@ async def upload_survey_file(
     description: str = Form(None),
     tags: str = Form(None),
     db=Depends(get_database),
+    current_user: User = Depends(get_current_active_user)
 ):
     """Upload survey from file (CSV, TXT, JSON) with optional metadata
 
@@ -613,6 +624,7 @@ async def upload_survey_file(
         "total_responses": len(cleaned_responses),
         "responses": cleaned_responses,
         "status": SurveyStatus.PENDING.value,
+        "user_id": current_user.id,
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow(),
     }
@@ -629,10 +641,13 @@ async def upload_survey_file(
 
 
 @router.get("/")
-async def get_surveys(db=Depends(get_database)):
-    """Get all surveys"""
+async def get_surveys(
+    db=Depends(get_database),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get all surveys for the current user"""
 
-    cursor = db.surveys.find().sort("created_at", -1)
+    cursor = db.surveys.find({"user_id": current_user.id}).sort("created_at", -1)
     surveys = []
 
     async for doc in cursor:
@@ -655,11 +670,15 @@ async def get_surveys(db=Depends(get_database)):
 
 
 @router.get("/{survey_id}")
-async def get_survey(survey_id: str, db=Depends(get_database)):
+async def get_survey(
+    survey_id: str, 
+    db=Depends(get_database),
+    current_user: User = Depends(get_current_active_user)
+):
     """Get survey details"""
 
     try:
-        doc = await db.surveys.find_one({"_id": ObjectId(survey_id)})
+        doc = await db.surveys.find_one({"_id": ObjectId(survey_id), "user_id": current_user.id})
     except:
         raise HTTPException(status_code=400, detail="Invalid survey ID")
 
@@ -684,11 +703,15 @@ async def get_survey(survey_id: str, db=Depends(get_database)):
 
 
 @router.delete("/{survey_id}")
-async def delete_survey(survey_id: str, db=Depends(get_database)):
+async def delete_survey(
+    survey_id: str, 
+    db=Depends(get_database),
+    current_user: User = Depends(get_current_active_user)
+):
     """Delete a survey"""
 
     try:
-        result = await db.surveys.delete_one({"_id": ObjectId(survey_id)})
+        result = await db.surveys.delete_one({"_id": ObjectId(survey_id), "user_id": current_user.id})
     except:
         raise HTTPException(status_code=400, detail="Invalid survey ID")
 

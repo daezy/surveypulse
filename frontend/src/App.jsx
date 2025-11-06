@@ -2,26 +2,54 @@ import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { ThemeProvider } from './contexts/ThemeContext'
+import { AuthProvider } from './contexts/AuthContext'
+import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
 import DashboardPage from './pages/DashboardPage'
 import UploadPage from './pages/UploadPage'
 import SurveyDetailPage from './pages/SurveyDetailPage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
 
 function App() {
     return (
         <ThemeProvider>
-            <Router>
-                <Layout>
-                    <Routes>
-                        <Route path="/" element={<HomePage />} />
-                        <Route path="/dashboard" element={<DashboardPage />} />
-                        <Route path="/upload" element={<UploadPage />} />
-                        <Route path="/survey/:surveyId" element={<SurveyDetailPage />} />
-                        <Route path="*" element={<Navigate to="/" replace />} />
-                    </Routes>
-                </Layout>
-                <Toaster
+            <AuthProvider>
+                <Router>
+                    <Layout>
+                        <Routes>
+                            <Route path="/" element={<HomePage />} />
+                            <Route path="/login" element={<LoginPage />} />
+                            <Route path="/register" element={<RegisterPage />} />
+                            <Route
+                                path="/dashboard"
+                                element={
+                                    <ProtectedRoute>
+                                        <DashboardPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/upload"
+                                element={
+                                    <ProtectedRoute>
+                                        <UploadPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route
+                                path="/survey/:surveyId"
+                                element={
+                                    <ProtectedRoute>
+                                        <SurveyDetailPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+                            <Route path="*" element={<Navigate to="/" replace />} />
+                        </Routes>
+                    </Layout>
+                    <Toaster
                     position="top-right"
                     toastOptions={{
                         duration: 4000,
@@ -57,6 +85,7 @@ function App() {
                     }}
                 />
             </Router>
+        </AuthProvider>
         </ThemeProvider>
     )
 }

@@ -1,15 +1,23 @@
 import React from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { Brain, LayoutDashboard, Upload, Github, Moon, Sun, Twitter, Linkedin, Mail } from 'lucide-react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Brain, LayoutDashboard, Upload, Github, Moon, Sun, Twitter, Linkedin, Mail, LogOut, LogIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useTheme } from '@/contexts/ThemeContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { motion } from 'framer-motion'
 
 export default function Layout({ children }) {
     const location = useLocation()
+    const navigate = useNavigate()
     const { theme, toggleTheme } = useTheme()
+    const { isAuthenticated, logout, user } = useAuth()
 
     const isActive = (path) => location.pathname === path
+    
+    const handleLogout = () => {
+        logout()
+        navigate('/')
+    }
 
     return (
         <div className="min-h-screen bg-background transition-colors duration-300">
@@ -43,28 +51,32 @@ export default function Layout({ children }) {
 
                         {/* Navigation Links - Minimal Style */}
                         <div className="flex items-center gap-2">
-                            <Link to="/dashboard">
-                                <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
-                                    <Button
-                                        variant={isActive('/dashboard') ? 'default' : 'ghost'}
-                                        className={`gap-2 h-10 ${isActive('/dashboard') ? 'bg-foreground text-background' : ''}`}
-                                    >
-                                        <LayoutDashboard className="w-4 h-4" />
-                                        <span className="hidden sm:inline font-medium">Dashboard</span>
-                                    </Button>
-                                </motion.div>
-                            </Link>
-                            <Link to="/upload">
-                                <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
-                                    <Button
-                                        variant={isActive('/upload') ? 'default' : 'ghost'}
-                                        className={`gap-2 h-10 ${isActive('/upload') ? 'bg-foreground text-background' : ''}`}
-                                    >
-                                        <Upload className="w-4 h-4" />
-                                        <span className="hidden sm:inline font-medium">Upload</span>
-                                    </Button>
-                                </motion.div>
-                            </Link>
+                            {isAuthenticated && (
+                                <>
+                                    <Link to="/dashboard">
+                                        <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
+                                            <Button
+                                                variant={isActive('/dashboard') ? 'default' : 'ghost'}
+                                                className={`gap-2 h-10 ${isActive('/dashboard') ? 'bg-foreground text-background' : ''}`}
+                                            >
+                                                <LayoutDashboard className="w-4 h-4" />
+                                                <span className="hidden sm:inline font-medium">Dashboard</span>
+                                            </Button>
+                                        </motion.div>
+                                    </Link>
+                                    <Link to="/upload">
+                                        <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
+                                            <Button
+                                                variant={isActive('/upload') ? 'default' : 'ghost'}
+                                                className={`gap-2 h-10 ${isActive('/upload') ? 'bg-foreground text-background' : ''}`}
+                                            >
+                                                <Upload className="w-4 h-4" />
+                                                <span className="hidden sm:inline font-medium">Upload</span>
+                                            </Button>
+                                        </motion.div>
+                                    </Link>
+                                </>
+                            )}
 
                             {/* Divider */}
                             <div className="w-px h-6 bg-border mx-2"></div>
@@ -97,6 +109,29 @@ export default function Layout({ children }) {
                                     </Button>
                                 </motion.div>
                             </a>
+                            
+                            {/* Auth Buttons */}
+                            {isAuthenticated ? (
+                                <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
+                                    <Button
+                                        variant="ghost"
+                                        onClick={handleLogout}
+                                        className="gap-2 h-10"
+                                    >
+                                        <LogOut className="w-4 h-4" />
+                                        <span className="hidden sm:inline font-medium">Logout</span>
+                                    </Button>
+                                </motion.div>
+                            ) : (
+                                <Link to="/login">
+                                    <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
+                                        <Button className="gap-2 h-10">
+                                            <LogIn className="w-4 h-4" />
+                                            <span className="hidden sm:inline font-medium">Login</span>
+                                        </Button>
+                                    </motion.div>
+                                </Link>
+                            )}
                         </div>
                     </div>
                 </div>

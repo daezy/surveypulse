@@ -6,7 +6,7 @@ import logging
 
 from app.core.config import settings
 from app.core.database import connect_to_mongo, close_mongo_connection
-from app.api.routes import analysis, surveys, health
+from app.api.routes import analysis, surveys, health, auth
 
 # Configure logging
 logging.basicConfig(
@@ -47,6 +47,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(health.router, prefix="/api/v1", tags=["Health"])
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(surveys.router, prefix="/api/v1/surveys", tags=["Surveys"])
 app.include_router(analysis.router, prefix="/api/v1/analysis", tags=["Analysis"])
 
