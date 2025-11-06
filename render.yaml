@@ -46,6 +46,7 @@ services:
     branch: master
     rootDir: frontend
     buildCommand: npm install && npm run build
+    staticPublishPath: dist
     pullRequestPreviewsEnabled: true
     envVars:
       - key: VITE_API_BASE_URL
