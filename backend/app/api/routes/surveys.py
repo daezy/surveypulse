@@ -523,6 +523,7 @@ async def upload_survey_file(
                         data["response_count"] for data in processed_data.values()
                     ),
                     "status": SurveyStatus.PENDING.value,
+                    "user_id": current_user.id,
                     "created_at": datetime.utcnow(),
                     "updated_at": datetime.utcnow(),
                 }

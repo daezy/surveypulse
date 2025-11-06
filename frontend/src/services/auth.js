@@ -6,7 +6,7 @@ const USER_KEY = "user";
 
 // Auth API calls
 export const register = async (email, password, fullName = null) => {
-  const response = await api.post("/auth/register", {
+  const response = await api.post("/api/v1/auth/register", {
     email,
     password,
     full_name: fullName,
@@ -15,7 +15,7 @@ export const register = async (email, password, fullName = null) => {
 };
 
 export const login = async (email, password) => {
-  const response = await api.post("/auth/login", {
+  const response = await api.post("/api/v1/auth/login", {
     email,
     password,
   });
@@ -45,7 +45,7 @@ export const refreshAccessToken = async () => {
     throw new Error("No refresh token available");
   }
 
-  const response = await api.post("/auth/refresh", {
+  const response = await api.post("/api/v1/auth/refresh", {
     refresh_token: refreshToken,
   });
 
@@ -58,7 +58,7 @@ export const refreshAccessToken = async () => {
 };
 
 export const getCurrentUser = async () => {
-  const response = await api.get("/auth/me");
+  const response = await api.get("/api/v1/auth/me");
   return response.data;
 };
 

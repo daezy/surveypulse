@@ -275,7 +275,6 @@ export default function Layout({ children }) {
                                 >
                                     ♥
                                 </motion.span>
-                                <span>using AI</span>
                             </div>
                         </div>
                     </div>

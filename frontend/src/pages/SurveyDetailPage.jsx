@@ -95,6 +95,13 @@ export default function SurveyDetailPage() {
 
     const handleStartAnalysis = async () => {
         setAnalyzing(true)
+
+        // Optimistically update UI to processing state immediately
+        setSurvey(prev => ({
+            ...prev,
+            status: 'processing'
+        }))
+
         try {
             await startAnalysis({
                 survey_id: surveyId,
@@ -104,6 +111,11 @@ export default function SurveyDetailPage() {
             // Start polling
             setTimeout(loadSurvey, 2000)
         } catch (error) {
+            // Revert status on error
+            setSurvey(prev => ({
+                ...prev,
+                status: 'pending'
+            }))
             toast.error(error.response?.data?.detail || 'Failed to start analysis')
         } finally {
             setAnalyzing(false)
