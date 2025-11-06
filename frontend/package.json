@@ -1,5 +1,5 @@
 {
-  "name": "llm-survey-frontend",
+  "name": "surveypulse-frontend",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -20,6 +20,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "date-fns": "^3.3.1",
+    "framer-motion": "^12.23.24",
     "jspdf": "^3.0.3",
     "lucide-react": "^0.323.0",
     "react": "^18.2.0",

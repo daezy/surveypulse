@@ -1,19 +1,20 @@
 from pydantic_settings import BaseSettings
 from typing import List
+import os
 
 
 class Settings(BaseSettings):
     """Application settings"""
 
     # Project
-    PROJECT_NAME: str = "LLM Survey Analysis System"
+    PROJECT_NAME: str = "SurveyPulse API"
     VERSION: str = "1.0.0"
-    DEBUG: bool = True
+    DEBUG: bool = False
 
     # API
     API_V1_STR: str = "/api/v1"
 
-    # CORS
+    # CORS - Support both list and comma-separated string from env
     ALLOWED_ORIGINS: List[str] = [
         "http://localhost:3000",
         "http://localhost:5173",
@@ -48,6 +49,13 @@ class Settings(BaseSettings):
         "case_sensitive": True,
         "extra": "ignore",  # Allow extra fields in .env
     }
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Parse ALLOWED_ORIGINS from comma-separated string if provided as env var
+        if os.getenv("ALLOWED_ORIGINS"):
+            origins = os.getenv("ALLOWED_ORIGINS").split(",")
+            self.ALLOWED_ORIGINS = [origin.strip() for origin in origins]
 
 
 settings = Settings()
