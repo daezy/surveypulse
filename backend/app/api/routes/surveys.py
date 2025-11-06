@@ -18,9 +18,9 @@ preprocessor = DataPreprocessor()
 
 @router.post("/upload")
 async def upload_survey(
-    survey: SurveyUpload, 
+    survey: SurveyUpload,
     db=Depends(get_database),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Upload survey responses - supports both simple and multi-question surveys"""
 
@@ -150,7 +150,7 @@ async def upload_two_file_survey(
     description: str = Form(None),
     tags: str = Form(None),
     db=Depends(get_database),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Upload survey with separate schema and responses files with optional metadata
 
@@ -392,7 +392,7 @@ async def upload_survey_file(
     description: str = Form(None),
     tags: str = Form(None),
     db=Depends(get_database),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Upload survey from file (CSV, TXT, JSON) with optional metadata
 
@@ -642,8 +642,7 @@ async def upload_survey_file(
 
 @router.get("/")
 async def get_surveys(
-    db=Depends(get_database),
-    current_user: User = Depends(get_current_active_user)
+    db=Depends(get_database), current_user: User = Depends(get_current_active_user)
 ):
     """Get all surveys for the current user"""
 
@@ -671,14 +670,16 @@ async def get_surveys(
 
 @router.get("/{survey_id}")
 async def get_survey(
-    survey_id: str, 
+    survey_id: str,
     db=Depends(get_database),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Get survey details"""
 
     try:
-        doc = await db.surveys.find_one({"_id": ObjectId(survey_id), "user_id": current_user.id})
+        doc = await db.surveys.find_one(
+            {"_id": ObjectId(survey_id), "user_id": current_user.id}
+        )
     except:
         raise HTTPException(status_code=400, detail="Invalid survey ID")
 
@@ -704,14 +705,16 @@ async def get_survey(
 
 @router.delete("/{survey_id}")
 async def delete_survey(
-    survey_id: str, 
+    survey_id: str,
     db=Depends(get_database),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Delete a survey"""
 
     try:
-        result = await db.surveys.delete_one({"_id": ObjectId(survey_id), "user_id": current_user.id})
+        result = await db.surveys.delete_one(
+            {"_id": ObjectId(survey_id), "user_id": current_user.id}
+        )
     except:
         raise HTTPException(status_code=400, detail="Invalid survey ID")
 

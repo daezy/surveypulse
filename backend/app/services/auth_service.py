@@ -30,10 +30,14 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    
+        expire = datetime.utcnow() + timedelta(
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        )
+
     to_encode.update({"exp": expire, "type": "access"})
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    encoded_jwt = jwt.encode(
+        to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
+    )
     return encoded_jwt
 
 
@@ -42,14 +46,18 @@ def create_refresh_token(data: dict) -> str:
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     to_encode.update({"exp": expire, "type": "refresh"})
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    encoded_jwt = jwt.encode(
+        to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
+    )
     return encoded_jwt
 
 
 def decode_token(token: str) -> dict:
     """Decode and verify JWT token"""
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
         return payload
     except JWTError:
         return None
@@ -77,9 +85,14 @@ async def get_user_by_id(user_id: str) -> Optional[User]:
 
 
 async def authenticate_user(email: str, password: str) -> Optional[UserInDB]:
-    """Authenticate user with email and password"""
+    """Authenticate user with email and password
+
+    Security: Uses constant-time comparison to prevent timing attacks
+    """
     user = await get_user_by_email(email)
     if not user:
+        # Run password verification even if user doesn't exist to prevent timing attacks
+        pwd_context.verify(password, pwd_context.hash("dummy"))
         return None
     if not verify_password(password, user.hashed_password):
         return None
@@ -92,7 +105,7 @@ async def create_user(user_create: UserCreate) -> User:
     existing_user = await get_user_by_email(user_create.email)
     if existing_user:
         raise ValueError("User with this email already exists")
-    
+
     # Create user document
     now = datetime.utcnow()
     user_dict = {
@@ -103,10 +116,10 @@ async def create_user(user_create: UserCreate) -> User:
         "created_at": now,
         "updated_at": now,
     }
-    
+
     # Insert into database
     result = await db.users.insert_one(user_dict)
-    
+
     # Return created user
     user_dict["id"] = str(result.inserted_id)
     return User(**user_dict)
@@ -117,6 +130,6 @@ async def update_user_password(user_id: str, new_password: str) -> bool:
     hashed_password = get_password_hash(new_password)
     result = await db.users.update_one(
         {"_id": ObjectId(user_id)},
-        {"$set": {"hashed_password": hashed_password, "updated_at": datetime.utcnow()}}
+        {"$set": {"hashed_password": hashed_password, "updated_at": datetime.utcnow()}},
     )
     return result.modified_count > 0

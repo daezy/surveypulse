@@ -248,13 +248,15 @@ async def start_analysis(
     request: AnalysisRequest,
     background_tasks: BackgroundTasks,
     db=Depends(get_database),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Start analysis of survey responses"""
 
     # Verify survey exists and belongs to user
     try:
-        survey = await db.surveys.find_one({"_id": ObjectId(request.survey_id), "user_id": current_user.id})
+        survey = await db.surveys.find_one(
+            {"_id": ObjectId(request.survey_id), "user_id": current_user.id}
+        )
     except:
         raise HTTPException(status_code=400, detail="Invalid survey ID")
 
@@ -276,14 +278,16 @@ async def start_analysis(
 
 @router.get("/{survey_id}/results")
 async def get_analysis_results(
-    survey_id: str, 
+    survey_id: str,
     db=Depends(get_database),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Get analysis results for a survey"""
-    
+
     # Verify survey belongs to user
-    survey = await db.surveys.find_one({"_id": ObjectId(survey_id), "user_id": current_user.id})
+    survey = await db.surveys.find_one(
+        {"_id": ObjectId(survey_id), "user_id": current_user.id}
+    )
     if not survey:
         raise HTTPException(status_code=404, detail="Survey not found")
 
@@ -304,14 +308,16 @@ async def get_analysis_results(
 
 @router.get("/{survey_id}/all-results")
 async def get_all_analysis_results(
-    survey_id: str, 
+    survey_id: str,
     db=Depends(get_database),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Get all analysis results for a survey"""
-    
+
     # Verify survey belongs to user
-    survey = await db.surveys.find_one({"_id": ObjectId(survey_id), "user_id": current_user.id})
+    survey = await db.surveys.find_one(
+        {"_id": ObjectId(survey_id), "user_id": current_user.id}
+    )
     if not survey:
         raise HTTPException(status_code=404, detail="Survey not found")
 
@@ -328,25 +334,29 @@ async def get_all_analysis_results(
 
 @router.delete("/{analysis_id}")
 async def delete_analysis(
-    analysis_id: str, 
+    analysis_id: str,
     db=Depends(get_database),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Delete an analysis result"""
-    
+
     # Get the analysis to verify ownership
     try:
         analysis = await db.analyses.find_one({"_id": ObjectId(analysis_id)})
     except:
         raise HTTPException(status_code=400, detail="Invalid analysis ID")
-        
+
     if not analysis:
         raise HTTPException(status_code=404, detail="Analysis not found")
-    
+
     # Verify the survey belongs to the user
-    survey = await db.surveys.find_one({"_id": ObjectId(analysis["survey_id"]), "user_id": current_user.id})
+    survey = await db.surveys.find_one(
+        {"_id": ObjectId(analysis["survey_id"]), "user_id": current_user.id}
+    )
     if not survey:
-        raise HTTPException(status_code=403, detail="Not authorized to delete this analysis")
+        raise HTTPException(
+            status_code=403, detail="Not authorized to delete this analysis"
+        )
 
     result = await db.analyses.delete_one({"_id": ObjectId(analysis_id)})
 
@@ -355,14 +365,16 @@ async def delete_analysis(
 
 @router.get("/{survey_id}/status")
 async def get_analysis_status(
-    survey_id: str, 
+    survey_id: str,
     db=Depends(get_database),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
 ):
     """Get the current status of survey analysis"""
-    
+
     # Verify survey belongs to user
-    survey = await db.surveys.find_one({"_id": ObjectId(survey_id), "user_id": current_user.id})
+    survey = await db.surveys.find_one(
+        {"_id": ObjectId(survey_id), "user_id": current_user.id}
+    )
     if not survey:
         raise HTTPException(status_code=404, detail="Survey not found")
 

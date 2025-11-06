@@ -13,7 +13,7 @@ export default function Layout({ children }) {
     const { isAuthenticated, logout, user } = useAuth()
 
     const isActive = (path) => location.pathname === path
-    
+
     const handleLogout = () => {
         logout()
         navigate('/')
@@ -109,7 +109,7 @@ export default function Layout({ children }) {
                                     </Button>
                                 </motion.div>
                             </a>
-                            
+
                             {/* Auth Buttons */}
                             {isAuthenticated ? (
                                 <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>

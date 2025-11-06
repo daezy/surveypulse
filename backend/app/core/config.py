@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from typing import List, Union
 import os
 
@@ -60,6 +60,24 @@ class Settings(BaseSettings):
             # Split comma-separated string into list
             return [origin.strip() for origin in v.split(",")]
         return v
+
+    @model_validator(mode="after")
+    def validate_security_settings(self):
+        """Validate security settings"""
+        # Warn if using default SECRET_KEY in production
+        if not self.DEBUG and self.SECRET_KEY == "your-secret-key-change-in-production":
+            raise ValueError(
+                "SECRET_KEY must be changed from default value in production. "
+                "Set DEBUG=False only after configuring a secure SECRET_KEY."
+            )
+
+        # Ensure SECRET_KEY is sufficiently long
+        if len(self.SECRET_KEY) < 32:
+            raise ValueError(
+                "SECRET_KEY must be at least 32 characters long for security"
+            )
+
+        return self
 
 
 settings = Settings()

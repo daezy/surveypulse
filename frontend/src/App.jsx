@@ -50,42 +50,42 @@ function App() {
                         </Routes>
                     </Layout>
                     <Toaster
-                    position="top-right"
-                    toastOptions={{
-                        duration: 4000,
-                        className: 'dark:bg-gray-800 dark:text-white',
-                        style: {
-                            borderRadius: '0.75rem',
-                            padding: '1rem',
-                        },
-                        success: {
-                            duration: 3000,
-                            iconTheme: {
-                                primary: '#10b981',
-                                secondary: '#fff',
-                            },
-                            style: {
-                                background: 'hsl(var(--card))',
-                                color: 'hsl(var(--card-foreground))',
-                                border: '1px solid hsl(var(--border))',
-                            },
-                        },
-                        error: {
+                        position="top-right"
+                        toastOptions={{
                             duration: 4000,
-                            iconTheme: {
-                                primary: '#ef4444',
-                                secondary: '#fff',
-                            },
+                            className: 'dark:bg-gray-800 dark:text-white',
                             style: {
-                                background: 'hsl(var(--card))',
-                                color: 'hsl(var(--card-foreground))',
-                                border: '1px solid hsl(var(--border))',
+                                borderRadius: '0.75rem',
+                                padding: '1rem',
                             },
-                        },
-                    }}
-                />
-            </Router>
-        </AuthProvider>
+                            success: {
+                                duration: 3000,
+                                iconTheme: {
+                                    primary: '#10b981',
+                                    secondary: '#fff',
+                                },
+                                style: {
+                                    background: 'hsl(var(--card))',
+                                    color: 'hsl(var(--card-foreground))',
+                                    border: '1px solid hsl(var(--border))',
+                                },
+                            },
+                            error: {
+                                duration: 4000,
+                                iconTheme: {
+                                    primary: '#ef4444',
+                                    secondary: '#fff',
+                                },
+                                style: {
+                                    background: 'hsl(var(--card))',
+                                    color: 'hsl(var(--card-foreground))',
+                                    border: '1px solid hsl(var(--border))',
+                                },
+                            },
+                        }}
+                    />
+                </Router>
+            </AuthProvider>
         </ThemeProvider>
     )
 }

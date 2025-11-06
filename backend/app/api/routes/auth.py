@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
-from app.models.user import UserCreate, User, Token, RefreshTokenRequest
+from app.models.user import UserCreate, User, Token, RefreshTokenRequest, LoginRequest
 from app.services.auth_service import (
     authenticate_user,
     create_user,
@@ -21,31 +20,37 @@ async def register(user_create: UserCreate):
         user = await create_user(user_create)
         return user
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.post("/login", response_model=Token)
-async def login(email: str, password: str):
-    """Login with email and password"""
-    user = await authenticate_user(email, password)
+async def login(login_request: LoginRequest):
+    """Login with email and password
+
+    Security: Credentials are sent in request body (not query params) to prevent exposure in logs/URLs
+    """
+    user = await authenticate_user(login_request.email, login_request.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
+    # Check if user is active
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Account is inactive"
+        )
+
     # Create tokens
     access_token = create_access_token(data={"sub": user.email})
     refresh_token = create_refresh_token(data={"sub": user.email})
-    
+
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
-        "token_type": "bearer"
+        "token_type": "bearer",
     }
 
 
@@ -53,43 +58,44 @@ async def login(email: str, password: str):
 async def refresh_token(refresh_request: RefreshTokenRequest):
     """Refresh access token using refresh token"""
     payload = decode_token(refresh_request.refresh_token)
-    
+
     if payload is None:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid refresh token"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
         )
-    
+
     # Check token type
     if payload.get("type") != "refresh":
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token type"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type"
         )
-    
+
     email = payload.get("sub")
     if email is None:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token payload"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload"
         )
-    
-    # Verify user still exists
+
+    # Verify user still exists and is active
     user = await get_user_by_email(email)
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
         )
-    
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Account is inactive"
+        )
+
     # Create new tokens
     access_token = create_access_token(data={"sub": user.email})
     new_refresh_token = create_refresh_token(data={"sub": user.email})
-    
+
     return {
         "access_token": access_token,
         "refresh_token": new_refresh_token,
-        "token_type": "bearer"
+        "token_type": "bearer",
     }
 
 
