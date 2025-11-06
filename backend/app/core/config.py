@@ -51,7 +51,7 @@ class Settings(BaseSettings):
         "extra": "ignore",  # Allow extra fields in .env
     }
 
-    @field_validator('ALLOWED_ORIGINS', mode='before')
+    @field_validator("ALLOWED_ORIGINS", mode="before")
     @classmethod
     def parse_cors_origins(cls, v):
         """Parse ALLOWED_ORIGINS from comma-separated string or list"""
