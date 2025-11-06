@@ -6,12 +6,14 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { getSurveys, deleteSurvey } from '@/services/api'
 import { formatDate, formatNumber, getStatusColor } from '@/lib/utils'
 
 export default function DashboardPage() {
     const [surveys, setSurveys] = useState([])
     const [loading, setLoading] = useState(true)
+    const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, surveyId: null, surveyTitle: '' })
 
     const loadSurveys = async () => {
         try {
@@ -28,9 +30,12 @@ export default function DashboardPage() {
         loadSurveys()
     }, [])
 
-    const handleDelete = async (surveyId) => {
-        if (!confirm('Are you sure you want to delete this survey?')) return
+    const handleDeleteClick = (surveyId, surveyTitle) => {
+        setDeleteDialog({ isOpen: true, surveyId, surveyTitle })
+    }
 
+    const handleDeleteConfirm = async () => {
+        const { surveyId } = deleteDialog
         try {
             await deleteSurvey(surveyId)
             toast.success('Survey deleted successfully')
@@ -38,6 +43,10 @@ export default function DashboardPage() {
         } catch (error) {
             toast.error('Failed to delete survey')
         }
+    }
+
+    const handleDeleteCancel = () => {
+        setDeleteDialog({ isOpen: false, surveyId: null, surveyTitle: '' })
     }
 
     if (loading) {
@@ -246,7 +255,7 @@ export default function DashboardPage() {
                                                             <Button
                                                                 variant="destructive"
                                                                 size="sm"
-                                                                onClick={() => handleDelete(survey.survey_id)}
+                                                                onClick={() => handleDeleteClick(survey.survey_id, survey.title)}
                                                                 aria-label="Delete survey"
                                                                 className="border-2"
                                                             >
@@ -264,6 +273,18 @@ export default function DashboardPage() {
                     </Card>
                 </motion.div>
             </div>
+
+            {/* Confirmation Dialog */}
+            <ConfirmDialog
+                isOpen={deleteDialog.isOpen}
+                onClose={handleDeleteCancel}
+                onConfirm={handleDeleteConfirm}
+                title="Delete Survey"
+                message={`Are you sure you want to delete "${deleteDialog.surveyTitle}"? This action cannot be undone and all associated analysis results will be permanently deleted.`}
+                confirmText="Delete"
+                cancelText="Cancel"
+                variant="danger"
+            />
         </div>
     )
 }
