@@ -7,20 +7,26 @@
 ## 📚 Documentation Files
 
 ### 🚀 Quick Start (Recommended for First-Time Deployers)
+
 **[QUICKSTART_DEPLOY.md](QUICKSTART_DEPLOY.md)**
+
 - 15-minute deployment guide
 - Minimal steps, maximum results
 - Perfect for getting started fast
 
 ### 📖 Complete Guide (Detailed Instructions)
+
 **[RENDER_DEPLOYMENT_GUIDE.md](RENDER_DEPLOYMENT_GUIDE.md)**
+
 - Comprehensive step-by-step instructions
 - Troubleshooting section
 - Performance optimization tips
 - Security best practices
 
 ### ✅ Deployment Checklist
+
 **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)**
+
 - Interactive checklist format
 - Track your progress
 - Don't miss any steps
@@ -31,19 +37,24 @@
 ## 🛠️ Configuration Files
 
 ### `render.yaml`
+
 Blueprint for one-click deployment on Render. Automatically configures both frontend and backend services.
 
 ### `frontend/.env.production`
+
 Production environment variables for the React frontend.
 
 ### `deploy-setup.sh`
+
 Automated setup script that:
+
 - Initializes git repository
 - Generates SECRET_KEY
 - Checks required files
 - Pushes to GitHub (optional)
 
 **Usage:**
+
 ```bash
 ./deploy-setup.sh
 ```
@@ -53,6 +64,7 @@ Automated setup script that:
 ## 🎯 Choose Your Deployment Path
 
 ### Path 1: Blueprint Deployment (Easiest) ⚡️
+
 **Time: 15 minutes**
 
 1. Run setup script: `./deploy-setup.sh`
@@ -67,6 +79,7 @@ Automated setup script that:
 ---
 
 ### Path 2: Manual Deployment (More Control) 🎛️
+
 **Time: 30 minutes**
 
 1. Deploy backend service manually
@@ -79,6 +92,7 @@ Automated setup script that:
 ---
 
 ### Path 3: Checklist-Guided (Comprehensive) ✅
+
 **Time: 35 minutes**
 
 1. Use interactive checklist
@@ -104,6 +118,7 @@ Before you start, sign up for these free services:
 ## 🔑 Environment Variables You'll Need
 
 ### Backend (3 required):
+
 ```env
 MONGODB_URI=mongodb+srv://...           # From MongoDB Atlas
 OPENAI_API_KEY=sk-...                   # From OpenAI
@@ -111,6 +126,7 @@ SECRET_KEY=<generated>                   # From deploy-setup.sh
 ```
 
 ### Frontend (1 required):
+
 ```env
 VITE_API_BASE_URL=https://your-backend.onrender.com/api/v1
 ```
@@ -177,14 +193,14 @@ git push origin main
 
 ## 📈 Deployment Timeline
 
-| Phase | Duration | Description |
-|-------|----------|-------------|
-| Setup | 5 min | MongoDB, GitHub, prepare files |
-| Backend | 10 min | Deploy FastAPI service |
-| Frontend | 5 min | Deploy React static site |
-| Configuration | 5 min | CORS, env vars |
-| Testing | 10 min | Verify everything works |
-| **Total** | **~35 min** | Complete deployment |
+| Phase         | Duration    | Description                    |
+| ------------- | ----------- | ------------------------------ |
+| Setup         | 5 min       | MongoDB, GitHub, prepare files |
+| Backend       | 10 min      | Deploy FastAPI service         |
+| Frontend      | 5 min       | Deploy React static site       |
+| Configuration | 5 min       | CORS, env vars                 |
+| Testing       | 10 min      | Verify everything works        |
+| **Total**     | **~35 min** | Complete deployment            |
 
 ---
 
@@ -203,20 +219,21 @@ Your deployment is successful when:
 
 ## 🐛 Common Issues & Quick Fixes
 
-| Issue | Quick Fix |
-|-------|-----------|
-| **CORS error** | Update `ALLOWED_ORIGINS` in backend env vars |
-| **Database connection failed** | Check `MONGODB_URI` string, verify IP allowlist |
-| **API timeout** | Cold start after 15min idle (free tier) |
-| **Build failed** | Check logs, verify `requirements.txt` or `package.json` |
-| **502 Bad Gateway** | Backend still deploying, wait 2-3 min |
-| **Blank frontend** | Check `VITE_API_BASE_URL`, inspect browser console |
+| Issue                          | Quick Fix                                               |
+| ------------------------------ | ------------------------------------------------------- |
+| **CORS error**                 | Update `ALLOWED_ORIGINS` in backend env vars            |
+| **Database connection failed** | Check `MONGODB_URI` string, verify IP allowlist         |
+| **API timeout**                | Cold start after 15min idle (free tier)                 |
+| **Build failed**               | Check logs, verify `requirements.txt` or `package.json` |
+| **502 Bad Gateway**            | Backend still deploying, wait 2-3 min                   |
+| **Blank frontend**             | Check `VITE_API_BASE_URL`, inspect browser console      |
 
 ---
 
 ## 💰 Cost Breakdown
 
 ### Free Tier (Recommended for Testing)
+
 - **Render**: Free (750 hours/month, cold starts)
 - **MongoDB Atlas**: Free M0 (512MB storage)
 - **Total**: **$0/month**
@@ -224,6 +241,7 @@ Your deployment is successful when:
 ⚠️ **Limitation**: Services sleep after 15 min inactivity (30-60s cold start)
 
 ### Production Tier (Recommended for Live Use)
+
 - **Render Starter**: $7/month (no cold starts)
 - **MongoDB M10**: $0 (M0 sufficient for most use cases)
 - **Total**: **$7/month**
@@ -245,11 +263,13 @@ Your deployment is successful when:
 ## 📞 Get Help
 
 ### Documentation
+
 - 📘 **Quick Start**: [QUICKSTART_DEPLOY.md](QUICKSTART_DEPLOY.md)
 - 📗 **Full Guide**: [RENDER_DEPLOYMENT_GUIDE.md](RENDER_DEPLOYMENT_GUIDE.md)
 - 📋 **Checklist**: [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)
 
 ### External Resources
+
 - 🌐 **Render Docs**: https://render.com/docs
 - 🍃 **MongoDB Docs**: https://docs.atlas.mongodb.com
 - ⚡ **FastAPI Deployment**: https://fastapi.tiangolo.com/deployment
