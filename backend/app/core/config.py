@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
-from typing import List
+from pydantic import field_validator
+from typing import List, Union
 import os
 
 
@@ -15,7 +16,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
 
     # CORS - Support both list and comma-separated string from env
-    ALLOWED_ORIGINS: List[str] = [
+    ALLOWED_ORIGINS: Union[List[str], str] = [
         "http://localhost:3000",
         "http://localhost:5173",
         "http://localhost:5174",
@@ -50,12 +51,14 @@ class Settings(BaseSettings):
         "extra": "ignore",  # Allow extra fields in .env
     }
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        # Parse ALLOWED_ORIGINS from comma-separated string if provided as env var
-        if os.getenv("ALLOWED_ORIGINS"):
-            origins = os.getenv("ALLOWED_ORIGINS").split(",")
-            self.ALLOWED_ORIGINS = [origin.strip() for origin in origins]
+    @field_validator('ALLOWED_ORIGINS', mode='before')
+    @classmethod
+    def parse_cors_origins(cls, v):
+        """Parse ALLOWED_ORIGINS from comma-separated string or list"""
+        if isinstance(v, str):
+            # Split comma-separated string into list
+            return [origin.strip() for origin in v.split(",")]
+        return v
 
 
 settings = Settings()
