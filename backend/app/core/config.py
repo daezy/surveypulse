@@ -20,6 +20,7 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://localhost:5173",
         "http://localhost:5174",
+        "https://surveypulse-frontend.onrender.com",
     ]
 
     # Database
