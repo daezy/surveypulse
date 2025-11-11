@@ -12,7 +12,7 @@ services:
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 300 --timeout-graceful-shutdown 30
-    healthCheckPath: /api/v1/health
+    # healthCheckPath: /api/v1/health
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0

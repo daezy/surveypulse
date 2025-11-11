@@ -1,16 +1,31 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from datetime import datetime
+from app.core.database import get_database
 
 router = APIRouter()
 
 
 @router.get("/health")
 async def health_check():
-    """Health check endpoint"""
+    """Simple health check endpoint - must respond quickly for Render"""
+    return {"status": "healthy"}
+
+
+@router.get("/health/detailed")
+async def detailed_health_check(db=Depends(get_database)):
+    """Detailed health check with database status"""
+    try:
+        # Quick ping to verify database connection
+        await db.command("ping")
+        db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+
     return {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
         "service": "LLM Survey Analysis API",
+        "database": db_status,
     }
 
 

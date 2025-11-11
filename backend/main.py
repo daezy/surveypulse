@@ -19,10 +19,21 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Startup and shutdown events"""
     logger.info("Starting up application...")
-    await connect_to_mongo()
+    try:
+        await connect_to_mongo()
+        logger.info("MongoDB connection successful")
+    except Exception as e:
+        logger.error(f"Failed to connect to MongoDB: {e}")
+        logger.warning("Application will start but database operations will fail")
+        # Don't crash the app - let it start and health check will still work
+
     yield
+
     logger.info("Shutting down application...")
-    await close_mongo_connection()
+    try:
+        await close_mongo_connection()
+    except Exception as e:
+        logger.error(f"Error closing MongoDB connection: {e}")
 
 
 # Initialize FastAPI app
