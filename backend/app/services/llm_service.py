@@ -450,14 +450,16 @@ CRITICAL INSTRUCTIONS:
 
         logger.info(f"Starting full analysis of {len(responses)} responses")
 
-        # Run all analyses IN PARALLEL for massive speedup
-        summary_result, sentiment_result, topics_result, problems_result = (
-            await asyncio.gather(
-                self.summarize_responses(responses),
-                self.analyze_sentiment(responses),
-                self.detect_topics(responses),
-                self.extract_open_problems(responses),
-            )
+        # Run analyses in batches of 2 for memory efficiency on free tier
+        # Still 2x faster than sequential, but uses less memory
+        summary_result, sentiment_result = await asyncio.gather(
+            self.summarize_responses(responses),
+            self.analyze_sentiment(responses),
+        )
+
+        topics_result, problems_result = await asyncio.gather(
+            self.detect_topics(responses),
+            self.extract_open_problems(responses),
         )
 
         # Ensure summary is clean text, not nested JSON
@@ -495,14 +497,16 @@ CRITICAL INSTRUCTIONS:
             f"Analyzing question '{question_text[:50]}...' with {len(responses)} responses"
         )
 
-        # Perform all analyses IN PARALLEL for massive speedup (4x faster!)
-        summary_result, sentiment_result, topics_result, problems_result = (
-            await asyncio.gather(
-                self.summarize_responses(responses),
-                self.analyze_sentiment(responses),
-                self.detect_topics(responses),
-                self.extract_open_problems(responses),
-            )
+        # Run analyses in batches of 2 for memory efficiency on free tier
+        # Still 2x faster than sequential, but more stable
+        summary_result, sentiment_result = await asyncio.gather(
+            self.summarize_responses(responses),
+            self.analyze_sentiment(responses),
+        )
+
+        topics_result, problems_result = await asyncio.gather(
+            self.detect_topics(responses),
+            self.extract_open_problems(responses),
         )
 
         # Ensure summary is clean text, not nested JSON
