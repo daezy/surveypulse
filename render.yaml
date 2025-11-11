@@ -7,7 +7,7 @@ services:
     name: surveypulse-backend
     runtime: python
     region: oregon
-    plan: free
+    plan: standard
     branch: master
     rootDir: backend
     buildCommand: pip install -r requirements.txt
