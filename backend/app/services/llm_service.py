@@ -3,6 +3,7 @@ from typing import List, Dict, Any
 import logging
 import json
 import random
+import asyncio
 from app.core.config import settings
 from app.models.schemas import SentimentResult, TopicResult, OpenProblem, AnalysisType
 
@@ -17,10 +18,10 @@ class LLMService:
         self.model = settings.OPENAI_MODEL
         self.max_tokens = settings.OPENAI_MAX_TOKENS
         self.temperature = settings.OPENAI_TEMPERATURE
-        # Maximum responses to analyze at once (to avoid context length issues)
-        self.max_responses_per_analysis = 500
+        # Reduced for faster analysis
+        self.max_responses_per_analysis = 300
         # For very large datasets, use stratified sampling
-        self.sample_size_large_dataset = 1000
+        self.sample_size_large_dataset = 500
 
     def _sample_responses(
         self, responses: List[str], max_samples: int = None
@@ -111,9 +112,9 @@ class LLMService:
     async def summarize_responses(self, responses: List[str]) -> Dict[str, Any]:
         """Generate summary and key findings from survey responses"""
 
-        # Sample responses if dataset is too large
+        # Sample responses if dataset is too large (reduced for speed)
         original_count = len(responses)
-        sampled_responses = self._sample_responses(responses, max_samples=200)
+        sampled_responses = self._sample_responses(responses, max_samples=100)
 
         responses_text = "\n".join(
             [f"{i+1}. {r}" for i, r in enumerate(sampled_responses)]
@@ -205,8 +206,8 @@ CRITICAL INSTRUCTIONS:
     async def analyze_sentiment(self, responses: List[str]) -> Dict[str, Any]:
         """Analyze sentiment of survey responses"""
 
-        # Sample responses for sentiment analysis
-        sampled_responses = self._sample_responses(responses, max_samples=200)
+        # Sample responses for sentiment analysis (reduced for speed)
+        sampled_responses = self._sample_responses(responses, max_samples=100)
 
         responses_text = "\n".join(
             [f"{i+1}. {r}" for i, r in enumerate(sampled_responses)]
@@ -286,8 +287,8 @@ CRITICAL INSTRUCTIONS:
     async def detect_topics(self, responses: List[str]) -> List[Dict[str, Any]]:
         """Detect main topics and themes in survey responses"""
 
-        # Sample responses for topic detection
-        sampled_responses = self._sample_responses(responses, max_samples=150)
+        # Sample responses for topic detection (reduced for speed)
+        sampled_responses = self._sample_responses(responses, max_samples=75)
 
         responses_text = "\n".join(
             [f"{i+1}. {r}" for i, r in enumerate(sampled_responses)]
@@ -366,8 +367,8 @@ CRITICAL INSTRUCTIONS:
     async def extract_open_problems(self, responses: List[str]) -> List[Dict[str, Any]]:
         """Extract open research problems and challenges mentioned in responses"""
 
-        # Sample responses for problem extraction
-        sampled_responses = self._sample_responses(responses, max_samples=150)
+        # Sample responses for problem extraction (reduced for speed)
+        sampled_responses = self._sample_responses(responses, max_samples=75)
 
         responses_text = "\n".join(
             [f"{i+1}. {r}" for i, r in enumerate(sampled_responses)]
@@ -449,11 +450,15 @@ CRITICAL INSTRUCTIONS:
 
         logger.info(f"Starting full analysis of {len(responses)} responses")
 
-        # Run all analyses
-        summary_result = await self.summarize_responses(responses)
-        sentiment_result = await self.analyze_sentiment(responses)
-        topics_result = await self.detect_topics(responses)
-        problems_result = await self.extract_open_problems(responses)
+        # Run all analyses IN PARALLEL for massive speedup
+        summary_result, sentiment_result, topics_result, problems_result = (
+            await asyncio.gather(
+                self.summarize_responses(responses),
+                self.analyze_sentiment(responses),
+                self.detect_topics(responses),
+                self.extract_open_problems(responses),
+            )
+        )
 
         # Ensure summary is clean text, not nested JSON
         summary_text = summary_result.get("summary", "")
@@ -490,11 +495,15 @@ CRITICAL INSTRUCTIONS:
             f"Analyzing question '{question_text[:50]}...' with {len(responses)} responses"
         )
 
-        # Perform targeted analysis for this specific question
-        summary_result = await self.summarize_responses(responses)
-        sentiment_result = await self.analyze_sentiment(responses)
-        topics_result = await self.detect_topics(responses)
-        problems_result = await self.extract_open_problems(responses)
+        # Perform all analyses IN PARALLEL for massive speedup (4x faster!)
+        summary_result, sentiment_result, topics_result, problems_result = (
+            await asyncio.gather(
+                self.summarize_responses(responses),
+                self.analyze_sentiment(responses),
+                self.detect_topics(responses),
+                self.extract_open_problems(responses),
+            )
+        )
 
         # Ensure summary is clean text, not nested JSON
         summary_text = summary_result.get("summary", "")
