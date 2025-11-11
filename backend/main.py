@@ -23,12 +23,12 @@ async def lifespan(app: FastAPI):
     try:
         await connect_to_mongo()
         logger.info("MongoDB connection successful")
-        
+
         # Start background processor for auto-analyzing pending surveys
         db = get_database()
         survey_processor.start(db, interval=60)  # Check every 60 seconds
         logger.info("🤖 Background survey processor started")
-        
+
     except Exception as e:
         logger.error(f"Failed to connect to MongoDB: {e}")
         logger.warning("Application will start but database operations will fail")
