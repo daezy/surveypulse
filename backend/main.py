@@ -5,8 +5,9 @@ from contextlib import asynccontextmanager
 import logging
 
 from app.core.config import settings
-from app.core.database import connect_to_mongo, close_mongo_connection
+from app.core.database import connect_to_mongo, close_mongo_connection, get_database
 from app.api.routes import analysis, surveys, health, auth
+from app.services.background_processor import survey_processor
 
 # Configure logging
 logging.basicConfig(
@@ -22,6 +23,12 @@ async def lifespan(app: FastAPI):
     try:
         await connect_to_mongo()
         logger.info("MongoDB connection successful")
+        
+        # Start background processor for auto-analyzing pending surveys
+        db = get_database()
+        survey_processor.start(db, interval=60)  # Check every 60 seconds
+        logger.info("🤖 Background survey processor started")
+        
     except Exception as e:
         logger.error(f"Failed to connect to MongoDB: {e}")
         logger.warning("Application will start but database operations will fail")
@@ -31,6 +38,8 @@ async def lifespan(app: FastAPI):
 
     logger.info("Shutting down application...")
     try:
+        # Stop background processor
+        await survey_processor.stop()
         await close_mongo_connection()
     except Exception as e:
         logger.error(f"Error closing MongoDB connection: {e}")
